@@ -26,8 +26,14 @@ except ImportError:  # pragma: no cover
 
 # Metric keys sourced from the units registry (vs. the zoning-delay data).
 _REGISTRY_METRIC_KEYS = ("bonus_units", "lost_units", "mention_to_passage_days")
-# Metric keys sourced from the zoning-delay data.
-_ZONING_METRIC_KEYS = ("zoning_median_days", "zoning_stalled_count")
+# Metric keys sourced from the zoning-delay data. The matter count is surfaced
+# as denominator context: a raw stalled count correlates with rezoning volume
+# (corr ≈ 0.79 in the 2023–2027 data), so it must never render without it.
+_ZONING_METRIC_KEYS = (
+    "zoning_median_days",
+    "zoning_matter_count",
+    "zoning_stalled_count",
+)
 
 _LOST_KINDS = {"downzone", "shrunk_development"}
 

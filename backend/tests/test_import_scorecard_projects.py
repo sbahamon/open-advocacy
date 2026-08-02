@@ -777,3 +777,66 @@ async def test_creates_status_records_for_all_entities() -> None:
             p.stop()
 
     assert status_mock.create_status_record.call_count == 6  # 3 entities × 2 projects
+
+
+@pytest.mark.asyncio
+async def test_ward_metrics_carrier_gets_vintage_and_ward_scoped_metadata() -> None:
+    """The carrier project carries metrics + metrics_as_of, and each entity's
+    record_metadata comes from its WARD number — never from its name."""
+    from scripts.import_scorecard_projects import import_scorecard_projects
+
+    entity = make_entity(
+        id=_ENTITY_A_ID, name="Totally Unmatched Name", jurisdiction_id=_JURISDICTION_ID
+    )
+    entity.district_name = "Ward 5"
+
+    (
+        entity_svc,
+        jurisdiction_svc,
+        project_svc,
+        group_svc,
+        status_svc,
+        status_mock,
+        project_mock,
+    ) = _make_services(entities=[entity])
+
+    ward_group_config = [{**_TEST_GROUP_CONFIG_ELMS[0], "ward_metrics": True}]
+    ps = _patches(
+        entity_svc,
+        jurisdiction_svc,
+        project_svc,
+        group_svc,
+        status_svc,
+        group_config=ward_group_config,
+        elms_projects=[_VOTE_PROJECT_DEF],
+    )
+    ps.append(
+        patch(
+            "scripts.import_scorecard_projects.build_ward_metric_values",
+            return_value={5: {"zoning_median_days": 42.0, "zoning_stalled_count": 1}},
+        )
+    )
+    ps.append(
+        patch(
+            "scripts.import_scorecard_projects.ZONING_DELAY_META",
+            {"computed_at": "2026-07-23"},
+        )
+    )
+    for p in ps:
+        p.start()
+    try:
+        await import_scorecard_projects()
+    finally:
+        for p in reversed(ps):
+            p.stop()
+
+    created = project_mock.create_project.call_args[0][0]
+    assert created.dashboard_config.metrics_as_of == "2026-07-23"
+    assert created.dashboard_config.metrics  # carrier declares the descriptors
+
+    record = status_mock.create_status_record.call_args[0][0]
+    assert record.entity_id == _ENTITY_A_ID
+    assert record.record_metadata == {
+        "zoning_median_days": 42.0,
+        "zoning_stalled_count": 1,
+    }

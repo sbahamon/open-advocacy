@@ -327,6 +327,43 @@ class TestGetScorecardMetrics:
         assert [m.key for m in result.metrics] == ["zoning_median_days"]
 
     @pytest.mark.asyncio
+    async def test_metrics_as_of_from_metrics_carrier_project(self):
+        """The data vintage travels with the metrics config to the response."""
+        group_id = uuid4()
+        jurisdiction_id = uuid4()
+
+        project = make_project(
+            group_id=group_id,
+            jurisdiction_id=jurisdiction_id,
+            dashboard_config=DashboardConfig(
+                position=0,
+                metrics=self._metrics("zoning_median_days"),
+                metrics_as_of="2026-07-23",
+            ),
+        )
+        service = _build_scorecard_service(projects_data=[project])
+        result = await service.get_scorecard(group_id, "Test Group")
+
+        assert result.metrics_as_of == "2026-07-23"
+
+    @pytest.mark.asyncio
+    async def test_metrics_as_of_none_when_not_declared(self):
+        group_id = uuid4()
+        jurisdiction_id = uuid4()
+
+        project = make_project(
+            group_id=group_id,
+            jurisdiction_id=jurisdiction_id,
+            dashboard_config=DashboardConfig(
+                position=0, metrics=self._metrics("zoning_median_days")
+            ),
+        )
+        service = _build_scorecard_service(projects_data=[project])
+        result = await service.get_scorecard(group_id, "Test Group")
+
+        assert result.metrics_as_of is None
+
+    @pytest.mark.asyncio
     async def test_undeclared_metadata_keys_are_dropped(self):
         """Only keys declared in the metrics config surface on the row."""
         group_id = uuid4()

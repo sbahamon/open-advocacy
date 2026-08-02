@@ -146,9 +146,11 @@ def test_build_merges_zoning_and_registry():
     # Ward 1: zoning display keys + registry aggregates; internal keys dropped.
     assert merged[1]["zoning_median_days"] == 128.0
     assert merged[1]["zoning_stalled_count"] == 3
+    # The matter count is displayed as the denominator context for the other
+    # two zoning columns (a raw stalled count without volume is misleading).
+    assert merged[1]["zoning_matter_count"] == 14
     assert merged[1]["bonus_units"] == 100
     assert merged[1]["lost_units"] == 0
-    assert "zoning_matter_count" not in merged[1]
     assert "n_resolved" not in merged[1]
 
     # Ward 2: null median omitted, but stalled count still surfaces.
@@ -166,7 +168,7 @@ def test_build_omits_wards_with_no_values():
     }
     # zoning_stalled_count 0 is a real value → ward retained.
     merged = build_ward_metric_values(zoning_delay=zoning, registry=[])
-    assert merged[3] == {"zoning_stalled_count": 0}
+    assert merged[3] == {"zoning_matter_count": 1, "zoning_stalled_count": 0}
 
 
 def test_build_with_defaults_returns_dict():

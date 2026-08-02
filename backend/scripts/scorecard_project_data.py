@@ -897,14 +897,31 @@ STC_IL_HOUSE_BASE_SLUGS: set[str] = {
 CHICAGO_WARD_METRICS: list[MetricDisplayConfig] = [
     MetricDisplayConfig(
         key="zoning_median_days",
-        label="Zoning Delay (median days)",
+        label="Ward Zoning Delay (median days)",
         description=(
-            "Median number of days from introduction to final action for this "
-            "ward's zoning reclassifications introduced since May 2023 (the start "
-            "of the current City Council term). Ward-scoped, not person-scoped: it "
-            "reflects the ward's zoning docket across the term regardless of alder "
-            "turnover. Computed from Chicago City Clerk eLMS records; matters still "
-            "pending are excluded from the median."
+            "Median number of days from City Council introduction to final "
+            "action for this ward's zoning reclassifications introduced since "
+            "May 2023 (the start of the current City Council term). Ward-scoped, "
+            "not person-scoped: it reflects the ward's zoning docket across the "
+            "term regardless of alder turnover. Measures the council phase only "
+            "— time an application spends before introduction (ward office / "
+            "planning-department review) is not captured. Computed from Chicago "
+            "City Clerk eLMS records; pending and withdrawn matters are excluded "
+            "from the median."
+        ),
+        format="number",
+        show_in_table=True,
+        show_in_tooltip=True,
+    ),
+    MetricDisplayConfig(
+        key="zoning_matter_count",
+        label="Ward Rezonings (count)",
+        description=(
+            "Number of zoning reclassifications geocoded to this ward since May "
+            "2023. Shown as context for the other zoning columns: wards with "
+            "more rezoning activity naturally accumulate more stalled matters, "
+            "so neither the delay median nor the stalled count should be read "
+            "without this denominator."
         ),
         format="number",
         show_in_table=True,
@@ -912,14 +929,14 @@ CHICAGO_WARD_METRICS: list[MetricDisplayConfig] = [
     ),
     MetricDisplayConfig(
         key="zoning_stalled_count",
-        label="Stalled >180d",
+        label="Ward Stalled >180d",
         description=(
             "Count of this ward's zoning reclassifications (introduced since May "
-            "2023) that are still in committee more than 180 days after "
-            "introduction, as of the data's frozen as-of date. Ward-scoped, not "
-            "person-scoped. This is a proxy for delay: re-referred or substituted "
-            "ordinances can appear stalled even when work is ongoing, so treat the "
-            "count as indicative rather than exact."
+            "2023) still awaiting a final action more than 180 days after "
+            "introduction, as of the data's as-of date. Ward-scoped, not "
+            "person-scoped. This is a raw count, not a rate: it correlates with "
+            "how many rezonings a ward files, so compare it against the ward's "
+            "rezoning count rather than reading it alone."
         ),
         format="number",
         show_in_table=True,

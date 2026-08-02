@@ -14,6 +14,7 @@ import { scorecardService } from '../../services/scorecard';
 import { EntityStatus, ScorecardEntityRow, ScorecardResponse } from '../../types';
 import { compareDistrictNames } from '../../utils/districtSort';
 import DesktopTable from './DesktopTable';
+import MetricNotes from './MetricNotes';
 import { compareByMetric } from './metricSort';
 import MobileCardList from './MobileCardList';
 
@@ -167,6 +168,8 @@ const Scorecard: React.FC = () => {
           onSort={handleSort}
         />
       )}
+
+      <MetricNotes metrics={data.metrics} metricsAsOf={data.metrics_as_of} />
     </Container>
   );
 };

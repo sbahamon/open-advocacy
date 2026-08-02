@@ -7,7 +7,7 @@ Network-free helpers used by ``scripts/fetch_zoning_delay_data.py``:
 - :func:`load_ward_polygons` / :func:`assign_ward` — Shapely point-in-polygon
   ward attribution using the committed ``app/data/chicago-wards.geojson``.
 - :func:`compute_ward_delay_stats` — median introduction → final-action days and
-  stalled-in-committee counts, per ward.
+  stalled-pending counts, per ward.
 - :func:`is_alder_sponsored` / :func:`matched_alder_sponsors` — alder-initiated
   detection over an eLMS matter detail payload.
 
@@ -33,7 +33,10 @@ from app.imports.sources.chicago_city_clerk_elms import normalize_name
 # Matters introduced before this year carry sentinel/garbage dates (e.g. 1900-01-01).
 MIN_VALID_YEAR = 2000
 
-# A pending matter counts as "stalled" once it has sat in committee this long.
+# A pending matter counts as "stalled" once it has waited this long without a
+# final action, regardless of status string. 180 days ≈ 3.6× the citywide
+# median resolved span (~50 days) — a matter this old is far outside the
+# normal committee cadence.
 STALLED_THRESHOLD_DAYS = 180
 
 WARD_GEOJSON_PATH = (
@@ -46,6 +49,18 @@ _AT_MARKER_RE = re.compile(r"(?:^|[\s\-])at[\s\-]*(?=\d)", re.IGNORECASE)
 
 # Trailing application-number suffix, with or without a separating space/hyphen.
 _APP_NO_RE = re.compile(r"[\s\-–,]*App(?:lication)?\.?\s*No.*$", re.IGNORECASE)
+
+# Bare application-number suffixes without the "No." token: "- A-8863",
+# "- A8866", "- App 22194". Capital A required to avoid eating street words.
+_BARE_APP_SUFFIX_RE = re.compile(r"[\s\-–,]+A(?:pp)?\.?[\s\-–]*\d+[A-Za-z0-9]*\s*$")
+
+# "Dr. Martin Luther King(, Jr.,) Dr" spellings defeat geocoders, and the
+# embedded comma truncates the first-address split. Normalize to "King Dr"
+# BEFORE splitting on separators.
+_MLK_RE = re.compile(
+    r"(?:Dr\.?\s+)?Martin\s+Luther\s+King(?:[\s,]*Jr\.?(?!\w))?[\s,]*(?:Dr\.?(?!\w))?",
+    re.IGNORECASE,
+)
 
 # Multi-address titles: keep only the first address.
 _ADDRESS_SEPARATOR_RE = re.compile(r"\s*(?:,|\band\b|;|/)\s*", re.IGNORECASE)
@@ -73,6 +88,8 @@ def extract_address_from_title(title: str | None) -> str | None:
 
     remainder = title[match.end() :]
     remainder = _APP_NO_RE.sub("", remainder)
+    remainder = _BARE_APP_SUFFIX_RE.sub("", remainder)
+    remainder = _MLK_RE.sub("King Dr", remainder)
     remainder = _ADDRESS_SEPARATOR_RE.split(remainder)[0]
     remainder = remainder.strip().strip("-–,;/ ").strip()
     remainder = re.sub(r"\s+", " ", remainder)
@@ -180,8 +197,8 @@ def _parse_elms_date(value: Any) -> date | None:
     return parsed
 
 
-def _is_in_committee(status: Any) -> bool:
-    return "in committee" in str(status or "").lower()
+def _is_withdrawn(sub_status: Any) -> bool:
+    return "withdrawn" in str(sub_status or "").lower()
 
 
 def compute_ward_delay_stats(
@@ -216,16 +233,28 @@ def compute_ward_delay_stats(
 
         introduced = _parse_elms_date(matter.get("introductionDate"))
         finalized = _parse_elms_date(matter.get("finalActionDate"))
+        # A withdrawal is not a resolution: it would enter the median as a
+        # misleading fast span (often 0 days), and a withdrawn-but-pending
+        # matter is no longer waiting on the council.
+        withdrawn = _is_withdrawn(matter.get("subStatus"))
 
         if finalized is not None:
-            if introduced is not None and (finalized - introduced).days >= 0:
+            if (
+                not withdrawn
+                and introduced is not None
+                and (finalized - introduced).days >= 0
+            ):
                 spans[ward].append((finalized - introduced).days)
             continue
 
+        if withdrawn:
+            continue
+
         pending[ward] += 1
+        # Status-blind on purpose: an allowlist of status strings previously
+        # hid a 1,100-day-old matter parked at "5-Council Consideration".
         if (
             introduced is not None
-            and _is_in_committee(matter.get("status"))
             and (as_of - introduced).days > STALLED_THRESHOLD_DAYS
         ):
             stalled[ward] += 1

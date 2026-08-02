@@ -70,6 +70,69 @@ def test_extract_address_variants(title, expected):
 
 
 @pytest.mark.parametrize(
+    "title,expected",
+    [
+        # Bare application-number suffixes without the "No." token (real eLMS
+        # titles): "- A-8863", "- A8866", "- App 22194" must all be stripped.
+        (
+            "Zoning Reclassification Map No. 30-F at 146 W 127th St - A-8863",
+            "146 W 127th St",
+        ),
+        (
+            "Zoning Reclassification Map No. 30-E at 25-27 E 119th St - A-8876",
+            "25 E 119th St",
+        ),
+        (
+            "Zoning Reclassification Map No. 45-K at 1700 W Foster Ave - A8866",
+            "1700 W Foster Ave",
+        ),
+        (
+            "Zoning Reclassification Map No. 3-K at 4038 W Potomac Ave - App 22194",
+            "4038 W Potomac Ave",
+        ),
+    ],
+)
+def test_extract_address_strips_bare_application_suffixes(title, expected):
+    assert extract_address_from_title(title) == expected
+
+
+@pytest.mark.parametrize(
+    "title,expected",
+    [
+        # "Dr. Martin Luther King (Jr.) Dr" spellings defeat geocoders and the
+        # comma-splitting first-address rule; normalize to "King Dr" (real
+        # eLMS titles, all previously unassigned or truncated).
+        (
+            "Zoning Reclassification Map No. 26-E at 10701 S Dr. Martin Luther King, Jr. Dr",
+            "10701 S King Dr",
+        ),
+        (
+            "Zoning Reclassification Map No. 10-E at 4325 S Dr. Martin Luther King Jr. Dr"
+            " - App No. 22832T1",
+            "4325 S King Dr",
+        ),
+        (
+            "Zoning Reclassification Map No. 20-E at 8335-8339 S Dr. Martin Luther King,"
+            " Jr., Dr - App No. 22629",
+            "8335 S King Dr",
+        ),
+        (
+            "Zoning Reclassification Map No. 8-E at 3654-3656 S Dr. Martin Luther King Jr. Dr"
+            " and 330-344 E 37th St - App No. 23035T1",
+            "3654 S King Dr",
+        ),
+        # Bare form without the honorific prefix or street type.
+        (
+            "Zoning Reclassification Map No. 8-E at 3927 S Martin Luther King",
+            "3927 S King Dr",
+        ),
+    ],
+)
+def test_extract_address_normalizes_mlk_drive(title, expected):
+    assert extract_address_from_title(title) == expected
+
+
+@pytest.mark.parametrize(
     "title",
     [
         None,
@@ -158,15 +221,25 @@ def test_load_ward_polygons_reads_all_50_chicago_wards():
         # Interior points verified against Chicago's official post-2023 ward
         # boundaries dataset (data.cityofchicago.org, p293-wvbd, edit_date
         # 2022-06-01 = the remap effective with the 2023 election).
+        #
+        # The first six points DISCRIMINATE between the 2015-2023 map and the
+        # post-2023 remap (each is >250 m inside its ward under both vintages,
+        # and each is assigned a DIFFERENT ward by the 2015-2023 map). A wrong-
+        # vintage polygon file cannot pass this test. The pre-2023 assignment
+        # is noted per point.
+        (41.6976, -87.6428, 21),  # 10805 S Halsted (Ward 21 office); pre-2023: 34
+        (41.8776, -87.6444, 34),  # 333 S Desplaines, West Loop; pre-2023: 42
+        (41.89602, -87.69393, 36),  # 2652 W Chicago Ave; pre-2023: 26
+        (41.96641, -87.7217, 33),  # 3701 W Leland Ave; pre-2023: 35
+        (41.78863, -87.76243, 13),  # 5710 S Central Ave; pre-2023: 23
+        (41.8511, -87.63462, 11),  # 268 W 23rd St; pre-2023: 25
+        # Stable landmarks (same ward under both vintages).
         (41.8837, -87.6319, 42),  # City Hall, 121 N LaSalle
-        (41.9235, -87.6975, 1),  # 2354 N Milwaukee Ave (Ward 1)
         (41.9475, -87.6564, 44),  # 1060 W Addison St (Wrigley Field)
-        (41.7794, -87.6446, 20),  # 63rd & Halsted
-        (41.7217, -87.5385, 10),  # 9500 S Ewing Ave
     ],
 )
 def test_chicago_ward_polygons_match_post_2023_official_map(lat, lon, ward):
-    """The committed geojson is the post-2023 remap; verify interior points.
+    """The committed geojson must be the post-2023 remap; verify interior points.
 
     These points sit well inside their wards, so the committed polygons'
     simplification cannot flip the result (unlike near-boundary addresses).
@@ -182,12 +255,13 @@ def test_chicago_ward_polygons_match_post_2023_official_map(lat, lon, ward):
 AS_OF = date(2026, 1, 1)
 
 
-def _matter(ward, intro, final=None, status="90-Final"):
+def _matter(ward, intro, final=None, status="90-Final", sub_status=None):
     return {
         "ward": ward,
         "introductionDate": intro,
         "finalActionDate": final,
         "status": status,
+        "subStatus": sub_status,
     }
 
 
@@ -242,21 +316,48 @@ def test_ward_with_no_resolved_matters_has_null_median():
     assert stats[5]["n_resolved"] == 0
 
 
-def test_stalled_requires_committee_status_and_180_days():
+def test_stalled_counts_any_pending_matter_over_180_days():
+    """Stalled is status-blind: any pending matter over the threshold counts.
+
+    An earlier status-string allowlist ("In Committee") silently excluded the
+    dataset's longest-pending matter (O2023-0002795, 5-Council Consideration,
+    1,100 days old at the frozen as-of date).
+    """
     matters = [
         # Pending, in committee, 200+ days → stalled
         _matter(6, "2025-06-01", None, "4-In Committee"),
         # Pending, in committee, but only ~30 days → not stalled
         _matter(6, "2025-12-01", None, "4-In Committee"),
-        # Pending and old but not in committee → not stalled
-        _matter(6, "2025-01-01", None, "2-Introduced"),
+        # Pending and old, deferred at council rather than in committee → stalled
+        _matter(6, "2025-01-01", None, "5-Council Consideration"),
         # Resolved → never stalled
         _matter(6, "2024-01-01", "2024-06-01", "90-Final"),
     ]
     stats = compute_ward_delay_stats(matters, AS_OF)
-    assert stats[6]["zoning_stalled_count"] == 1
+    assert stats[6]["zoning_stalled_count"] == 2
     assert stats[6]["n_pending"] == 3
     assert stats[6]["zoning_matter_count"] == 4
+
+
+def test_withdrawn_matters_are_excluded_from_the_median():
+    matters = [
+        _matter(8, "2024-01-01", "2024-01-11"),
+        # Withdrawn same day it was introduced: a 0-day "resolution" that says
+        # nothing about how fast the ward clears rezonings.
+        _matter(8, "2024-01-01", "2024-01-01", sub_status="99-Withdrawn"),
+    ]
+    stats = compute_ward_delay_stats(matters, AS_OF)
+    assert stats[8]["zoning_median_days"] == 10.0
+    assert stats[8]["n_resolved"] == 1
+    assert stats[8]["zoning_matter_count"] == 2
+
+
+def test_withdrawn_pending_matter_is_never_stalled():
+    matters = [
+        _matter(9, "2024-01-01", None, "4-In Committee", sub_status="99-Withdrawn")
+    ]
+    stats = compute_ward_delay_stats(matters, AS_OF)
+    assert stats[9]["zoning_stalled_count"] == 0
 
 
 def test_stalled_boundary_is_strictly_greater_than_180_days():

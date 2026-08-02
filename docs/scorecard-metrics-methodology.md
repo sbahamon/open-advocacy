@@ -29,20 +29,35 @@ rezones a parcel. In eLMS these have `matterCategory == "ZONING RECLASSIFICATION
 titles like `Zoning Reclassification Map No. 11-J at 4634-4636 N Avers Ave - App No. 23124T1`.
 
 **`zoning_median_days`** (per ward). Median of `finalActionDate − introductionDate` in
-days, over the ward's **resolved** reclassifications (those with a real `finalActionDate`).
-This is a **ward-scoped** measure of how long rezonings take to clear the ward, not a
-personal attribute of the sitting alder. Tooltips say "ward's".
+days, over the ward's **resolved, non-withdrawn** reclassifications (those with a real
+`finalActionDate` whose `subStatus` does not contain "Withdrawn" — a withdrawal is not a
+resolution and would enter the median as a misleading fast span). This is a **ward-scoped**
+measure of how long rezonings take to clear the ward, not a personal attribute of the
+sitting alder. It measures the **City Council phase only**: time an application spends
+before introduction (ward office / planning-department review) is invisible to eLMS and
+is not captured. Both caveats appear in the tooltip and in the always-visible metric
+notes under the table.
 
-**`zoning_stalled_count`** (per ward). Number of the ward's reclassifications that are
-**still in committee more than 180 days** after introduction, as of the frozen `as-of`
-date (see below). "In committee" = `finalActionDate` is null **and** the matter status
-string contains "In Committee". The 180-day rule is a **proxy** for a stalled application,
-not an official designation — re-referred or substituted ordinances can inflate it, which
-the tooltip discloses.
+**`zoning_matter_count`** (per ward). Number of reclassifications geocoded to the ward in
+the term window. Displayed as a column: it is the denominator context for the other two —
+wards with more rezoning activity naturally accumulate more stalled matters (stalled and
+matter counts correlate at ≈0.79 in this data), so neither the median nor the stalled
+count should be read without it.
+
+**`zoning_stalled_count`** (per ward). Number of the ward's reclassifications with **no
+final action more than 180 days after introduction**, as of the frozen `as-of` date (see
+below), excluding withdrawn matters. The rule is deliberately **status-blind**: an earlier
+version required the status string "In Committee", which silently excluded the dataset's
+longest-pending matter (`O2023-0002795`, parked at "5-Council Consideration" for 1,100+
+days). 180 days ≈ 3.6× the citywide median resolved span (50 days). The threshold is a
+**proxy** for a stalled application, not an official designation, and the count is
+monotonically nondecreasing as the as-of date advances — treat it as a floor.
 
 **`as-of` date.** The stalled computation needs a "today". It is frozen into the generated
-data file (`ZONING_DELAY_META.computed_at`) so the committed numbers are deterministic and
-reproducible. The current data was generated with `--as-of 2026-07-23`.
+data file (`ZONING_DELAY_META.computed_at`), surfaced to the UI as
+`ScorecardResponse.metrics_as_of`, and displayed under the table. `--as-of` is a required
+flag so the vintage is always explicit. The current data was generated with
+`--as-of 2026-08-02`.
 
 **Bonus units** (Phase 2). Housing units enabled by **alder-initiated** proactive
 upzonings since that alder's election. Sum of `units_delta` over registry items with
@@ -64,11 +79,20 @@ a deliberate, narrow definition.
 
 | Metric field | Source API / input | Fetch script | Generated data file | Aggregation | Seeder | API field | Frontend |
 |---|---|---|---|---|---|---|---|
-| `zoning_median_days`, `zoning_stalled_count` | eLMS `GET /matter` (list) + `/matter/{guid}` (detail) + geocoding | `backend/scripts/fetch_zoning_delay_data.py` | `backend/app/data/ward_zoning_delay_data.py` (`WARD_ZONING_DELAY`, `ZONING_DELAY_META`) | `backend/app/imports/sources/ward_metrics.py::build_ward_metric_values()` | `backend/scripts/import_scorecard_projects.py` → carrier project's `EntityStatusRecord.record_metadata` | `ScorecardEntityRow.metrics[key]` + `ScorecardResponse.metrics[]` | `Scorecard/DesktopTable.tsx` + `MetricCell.tsx` |
+| `zoning_median_days`, `zoning_matter_count`, `zoning_stalled_count` | eLMS `GET /matter` (list) + `/matter/{guid}` (detail) + geocoding | `backend/scripts/fetch_zoning_delay_data.py` | `backend/app/data/ward_zoning_delay_data.py` (`WARD_ZONING_DELAY`, `ZONING_DELAY_META`) | `backend/app/imports/sources/ward_metrics.py::build_ward_metric_values()` | `backend/scripts/import_scorecard_projects.py` → carrier project's `EntityStatusRecord.record_metadata` (+ `dashboard_config.metrics_as_of`) | `ScorecardEntityRow.metrics[key]` + `ScorecardResponse.metrics[]` + `ScorecardResponse.metrics_as_of` | `Scorecard/DesktopTable.tsx` + `MetricCell.tsx` + `MetricNotes.tsx` |
 | `bonus_units`, `lost_units`, `mention_to_passage_days` | Curated news/ordinance research | (manual + Phase-2 agent workflow) | `backend/app/data/alder_units_registry.py` (`ALDER_UNITS_REGISTRY`) | `ward_metrics.py::aggregate_units_registry()` | same seeder path | same | same |
 
 **Supporting artifacts:**
-- `backend/app/data/zoning_geocode_cache.py` (`ZONING_GEOCODE_CACHE`) — committed address→lat/lon/ward cache (1207 addresses, 23 cached failures as `None`). Makes re-runs and CI need no geocoding key.
+- `backend/app/data/chicago-wards.geojson` — the **post-2023 official ward map**
+  (data-portal `p293-wvbd`, edit_date 2022-06-01, effective with the 2023 election),
+  simplified with 1e-5° tolerance (~1 m; verified to change zero ward assignments over
+  all cached points vs. full resolution). **History:** until 2026-08-02 this file was
+  the superseded 2015–2023 map, which misattributed ~21.5% of matters; the replacement
+  changed most wards' published numbers.
+  `tests/test_zoning_delay.py::test_chicago_ward_polygons_match_post_2023_official_map`
+  now pins six interior points that are assigned **different** wards by the two map
+  vintages, so a wrong-vintage file cannot pass CI.
+- `backend/app/data/zoning_geocode_cache.py` (`ZONING_GEOCODE_CACHE`) — committed address→lat/lon/ward cache (1,226 entries, 23 cached failures as `None`; some entries are stale keys from older parser versions and are harmless). Makes re-runs and CI need no geocoding key. The `ward` field in the cache is **output only** — ward assignment is recomputed from the cached coordinates on every run, so a ward-map update takes effect without re-geocoding.
 - `backend/app/data/alder_zoning_candidates.py` (`ALDER_ZONING_CANDIDATES`) — **Phase-2 research seed only** (not used at runtime): alder-sponsored reclassifications keyed by normalized sponsor name (291 rows across 41 alders).
 - `backend/app/imports/sources/zoning_delay.py` — network-free pure logic: `extract_address_from_title`, `assign_ward` (Shapely point-in-polygon over `chicago-wards.geojson`), `compute_ward_delay_stats`, `is_alder_sponsored`, `meters_to_ward_boundary`.
 - `backend/app/imports/sources/ward_utils.py::parse_ward_number` — shared "Ward N" → int parser (also used by `import_adu_project_data.py`).
@@ -95,20 +119,26 @@ the pinned `ruff`/`mypy`/`pytest`.
 
 ```bash
 # Optional: set GEOCODING_API_KEY in backend/.env to use Google instead of Nominatim.
-python -m scripts.fetch_zoning_delay_data --as-of 2026-07-23
+python -m scripts.fetch_zoning_delay_data --as-of 2026-08-02
 ```
 
 The script caches every eLMS page and matter detail under `backend/.elms_cache/`
-(gitignored) and every geocode in the committed `zoning_geocode_cache.py`, so **re-runs are
-near-instant and make no network calls**:
+(gitignored) and every geocode in the committed `zoning_geocode_cache.py`, so **re-runs
+are near-instant and make no geocoding or matter-detail calls** (each run still issues
+one eLMS meta request and one alder-roster request):
 
 ```bash
-python -m scripts.fetch_zoning_delay_data --as-of 2026-07-23   # seconds, fully cached
-git diff --stat backend/app/data/ward_zoning_delay_data.py     # should be empty on a clean re-run
+python -m scripts.fetch_zoning_delay_data --as-of 2026-08-02   # seconds, fully cached
+git diff backend/app/data/ward_zoning_delay_data.py            # only the Generated timestamp should move on a clean re-run
 ```
 
-Flags: `--refresh-geocode` retries the 23 cached geocode failures; `--force` writes even if
-ward-assignment coverage falls below the 80% floor (it is currently 95.6%).
+Flags: `--as-of` is **required** (the vintage must be explicit). `--refresh-geocode`
+retries cached geocode **failures only** — successes always come from the cache. A
+transient geocoder outage (rate limit, 5xx) is never written to the cache as a permanent
+failure; only a definitive "no result" or an out-of-Chicago hit is. `--force` writes even
+if ward-assignment coverage falls below the 80% floor (it is currently 96.5%). If the
+alder-roster fetch fails, the Phase-2 candidates file is left untouched rather than
+truncated.
 
 **Re-seed the scorecard** (idempotent by slug; safe to re-run):
 
@@ -124,13 +154,22 @@ curl -s localhost:8000/api/scorecard/strong-towns-chicago-chicago-city-council \
   | jq '.metrics, .entities[0].metrics'
 ```
 
-### Expected figures for the committed data (as-of 2026-07-23)
+### Expected figures for the committed data (as-of 2026-08-02)
 
-- Target matters (ZONING RECLASSIFICATIONS since 2023-05-15): **1,278**
-- Ward-assignment coverage: **95.6%** (1,222 assigned / 56 unassigned; the 56 record numbers are listed in `ZONING_DELAY_META.unassigned_record_numbers`)
-- Per-ward matter count: min **3**, median **18.5**, max **94**; **all 50 wards populated**, all 50 have a median
-- Total stalled >180 days: **99**
-- Near-boundary points (<30 m from a ward line, reassignment-risk under the simplified polygon): **171 / 1,222 = 14.0%** (`ZONING_DELAY_META.near_boundary_count`)
+- Target matters (ZONING RECLASSIFICATIONS since 2023-05-15): **1,278** (deduplicated by `matterId`)
+- Ward-assignment coverage: **96.5%** (1,233 assigned / 45 unassigned; the 45 record numbers are listed in `ZONING_DELAY_META.unassigned_record_numbers`)
+- Per-ward matter count: min **3**, median **18.5**, max **103**; **all 50 wards populated**, all 50 have a median
+- Per-ward `n_resolved`: min **2**; 8 wards below 10 (small-N medians — see §5)
+- Total stalled >180 days: **100**
+- Withdrawn matters excluded from medians: **1** (`O2026-0022148`)
+- Near-boundary points (<30 m from a ward line, reassignment-risk under the simplified polygon): **184 / 1,233 = 14.9%** (`ZONING_DELAY_META.near_boundary_count`)
+
+> **Numbers changed on 2026-08-02** relative to the first published snapshot (as-of
+> 2026-07-23): the ward map was corrected from the 2015–2023 vintage to the post-2023
+> map (≈21.5% of points moved wards), the stalled rule became status-blind, withdrawn
+> matters left the median, ~11 previously unparseable/ungeocodable addresses were
+> recovered, and `--as-of` advanced. The underlying eLMS corpus was verified unchanged
+> between the two dates via a live API sweep.
 
 ---
 
@@ -139,7 +178,15 @@ curl -s localhost:8000/api/scorecard/strong-towns-chicago-chicago-city-council \
 1. **Re-derive one ward's median by hand.** Pick a ward, pull its resolved matters from the
    cache (`backend/.elms_cache/matters/*.json`), compute `finalActionDate − introductionDate`
    for each, take the median, and compare to `WARD_ZONING_DELAY[ward]["zoning_median_days"]`.
-   Confirm sentinel dates (`1900-01-01`) and negative spans are excluded.
+   Confirm withdrawn matters and negative spans are excluded. (Sentinel dates like
+   `1900-01-01` are guarded against in code but have zero occurrences in the current
+   corpus, so that guard cannot be exercised against real data.)
+1a. **Verify the ward-map vintage.** The committed
+   `backend/app/data/chicago-wards.geojson` must be the post-2023 map. Check a point the
+   two vintages disagree on — e.g. 10805 S Halsted (41.6976, −87.6428) must assign to
+   ward **21** (the 2015–2023 map says 34), and 333 S Desplaines (41.8776, −87.6444)
+   must assign to ward **34** (the old map says 42). The unit test
+   `test_chicago_ward_polygons_match_post_2023_official_map` pins six such points.
 2. **Check coverage honesty.** Confirm `len(ZONING_DELAY_META["unassigned_record_numbers"])`
    equals `total_matters − assigned`, and that **no ward was assigned by guessing** — every
    unparseable/failed address is in the unassigned list, never dropped into a ward.
@@ -156,32 +203,49 @@ curl -s localhost:8000/api/scorecard/strong-towns-chicago-chicago-city-council \
 5. **Registry citations (Phase 2).** For a sample of `ALDER_UNITS_REGISTRY` items, open each
    `citations` URL and confirm it supports the `units_delta` and the alder attribution.
    `tests/test_alder_units_registry.py` enforces the structural rules (see §6).
-6. **Boundary exposure.** Spot-check a few of the 171 near-boundary record numbers against
+6. **Boundary exposure.** Spot-check a few of the 184 near-boundary record numbers against
    Chicago's official ward map; confirm any misassignment doesn't move a ward's *median*
-   materially (medians over ~25 matters/ward are robust to a handful of edge flips).
+   materially. Note this robustness argument only holds for wards with a healthy sample —
+   8 wards have fewer than 10 resolved matters (minimum: 2), and their medians are
+   individually fragile. The published `zoning_matter_count` column and the `n_resolved`
+   field in the data file give the denominator.
 
 ---
 
 ## 5. Known limitations & judgment calls
 
-- **Geocoding failures are never guessed.** 56 matters (4.4%) could not be confidently
-  placed in a ward — 23 hard geocode failures, some out-of-Chicago rejects (e.g.
+- **Geocoding failures are never guessed.** 45 matters (3.5%) could not be confidently
+  placed in a ward — hard geocode failures, out-of-Chicago rejects (e.g.
   "400 N Elizabeth Ave" resolving to Waukegan), and titles with no parseable address. They
   are excluded and listed, not distributed into wards.
 - **First-address-only rule.** Titles listing multiple addresses are geocoded on the first
-  address; address ranges (`4634-4636`) collapse to the first house number.
-- **Simplified ward polygons.** `backend/app/data/chicago-wards.geojson` is the correct
-  post-2023 official map (verified 5/5 on interior points vs. data-portal `p293-wvbd`) but is
-  geometrically simplified, so **14% of points fall within 30 m of a ward boundary** and could
-  in principle reassign under the exact boundary. Acceptable for ward-level medians; fully
-  auditable via `near_boundary_record_numbers`.
-- **Stalled-count proxy.** The ">180 days in committee" rule counts re-referred/substituted
-  ordinances as stalled even when they are progressing. Treat `zoning_stalled_count` as a
-  signal, not a precise backlog.
+  address; address ranges (`4634-4636`) collapse to the first house number. Bare
+  application-number suffixes (`- A-8863`, `- App 22194`) are stripped, and
+  "Dr. Martin Luther King (Jr.) Dr" spellings are normalized to "King Dr" before
+  geocoding — both classes previously caused ward-correlated coverage loss on the South
+  Side.
+- **Simplified ward polygons.** `backend/app/data/chicago-wards.geojson` is the post-2023
+  official map (`p293-wvbd`), simplified at ~1 m tolerance (verified to flip zero
+  assignments vs. full resolution over all cached points). **14.9% of points fall within
+  30 m of a ward boundary** and could in principle reassign under the exact boundary.
+  Acceptable for ward-level medians; fully auditable via `near_boundary_record_numbers`.
+- **Stalled count is volume-confounded.** `zoning_stalled_count` is a raw count, and it
+  correlates with the ward's rezoning volume (corr ≈ 0.79) — busy wards accumulate more
+  stalled matters, and a ward that deters applications entirely shows zero. That is why
+  `zoning_matter_count` is displayed alongside it and the tooltip says to read the two
+  together. It is also monotonically nondecreasing as the as-of date ages: the published
+  figure is a floor. (An earlier caveat here blamed re-referred/substituted ordinances
+  for inflating the count; that mechanism is **not observable** in the eLMS list payload
+  — substitute ordinances' originals do not appear in the sweep at all — so the caveat
+  was retired as unsupported.)
 - **Ward-scoped, not person-scoped.** Delay metrics describe the **ward** across the whole
   term. Where an alder changed mid-term, some of the ward's delay history predates the sitting
-  alder. Unit metrics (Phase 2), by contrast, are per-alder and gated on each alder's
-  `elected` date in the registry.
+  alder. This is stated in each tooltip and in the always-visible metric notes rendered
+  under the table (including the mobile layout). Unit metrics (Phase 2), by contrast, are
+  per-alder and gated on each alder's `elected` date in the registry.
+- **Refresh scope.** The admin scorecard refresh endpoint updates vote/sponsorship data
+  only; the zoning columns are frozen at `metrics_as_of` until the fetch script is re-run
+  and the seeder re-executed. The vintage is displayed so readers can see the difference.
 - **Candidate-seed name-normalization gap (Phase 2 action item).** `ALDER_ZONING_CANDIDATES`
   keys sponsors by `normalize_name`. Four sponsor names matched no roster entry: two are
   non-persons ("Misc. Transmittal", "Dept./Agency", expected), but **two are real alders whose

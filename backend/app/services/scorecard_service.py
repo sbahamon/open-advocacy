@@ -106,14 +106,20 @@ class ScorecardService:
 
         # Metric descriptors live on the first project (in position order) that
         # declares any — same "position-0 carrier" convention as representative_title.
-        metrics_config: list[MetricDisplayConfig] = next(
+        metrics_carrier = next(
             (
-                p.dashboard_config.metrics
+                p.dashboard_config
                 for p in projects
                 if p.dashboard_config and p.dashboard_config.metrics
             ),
-            [],
+            None,
         )
+        metrics_config: list[MetricDisplayConfig] = (
+            metrics_carrier.metrics
+            if metrics_carrier and metrics_carrier.metrics
+            else []
+        )
+        metrics_as_of = metrics_carrier.metrics_as_of if metrics_carrier else None
         metric_keys = {m.key for m in metrics_config}
 
         # 2. Get jurisdiction from the first project (all scorecard projects share one jurisdiction)
@@ -128,6 +134,7 @@ class ScorecardService:
                 projects=scorecard_projects,
                 entities=[],
                 metrics=metrics_config,
+                metrics_as_of=metrics_as_of,
             )
 
         # Enrich entities with district names
@@ -203,6 +210,7 @@ class ScorecardService:
             projects=scorecard_projects,
             entities=entity_rows,
             metrics=metrics_config,
+            metrics_as_of=metrics_as_of,
         )
 
     async def _enrich_with_district_names(self, entities: list) -> list:

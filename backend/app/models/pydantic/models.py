@@ -143,6 +143,8 @@ class DashboardConfig(BaseModel):
     representative_title: str | None = None
     status_labels: dict[str, str] | None = None
     metrics: list[MetricDisplayConfig] | None = None
+    # ISO date the metric values were computed at (data vintage shown to users).
+    metrics_as_of: str | None = None
     position: int | None = None
 
 
@@ -207,6 +209,7 @@ class ScorecardResponse(BaseModel):
     projects: list[ScorecardProject]
     entities: list[ScorecardEntityRow]
     metrics: list[MetricDisplayConfig] = []
+    metrics_as_of: str | None = None
 
 
 class UserBase(BaseModel):

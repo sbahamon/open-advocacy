@@ -16,10 +16,15 @@ guessed — an address that fails to geocode or falls outside every ward polygon
 is counted against coverage and its record number is listed in the meta.
 
 Usage:
-    python -m scripts.fetch_zoning_delay_data                # resume + today's as-of
     python -m scripts.fetch_zoning_delay_data --as-of 2026-07-23
-    python -m scripts.fetch_zoning_delay_data --refresh-geocode
-    python -m scripts.fetch_zoning_delay_data --no-resume --force
+    python -m scripts.fetch_zoning_delay_data --as-of 2026-07-23 --refresh-geocode
+    python -m scripts.fetch_zoning_delay_data --as-of 2026-07-23 --no-resume --force
+
+``--as-of`` is required so the committed data's vintage is always explicit.
+``--refresh-geocode`` retries cached geocode FAILURES only; successes are
+always served from the committed cache. Ward assignment is recomputed from
+cached coordinates on every run, so replacing the ward GeoJSON takes effect
+without re-geocoding.
 """
 
 from __future__ import annotations
@@ -174,6 +179,30 @@ def _page_max_intro(page: list[dict[str, Any]]) -> date | None:
     return max(dates) if dates else None
 
 
+def filter_target_matters(pages: list[list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    """Keep in-window zoning reclassifications, deduplicated by matterId.
+
+    Pagination shift while sweeping can repeat a row on a later page; a
+    duplicate would double-count in every ward statistic, so the first
+    occurrence wins.
+    """
+    zoning: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for page in pages:
+        for matter in page:
+            if matter.get("matterCategory") != TARGET_CATEGORY:
+                continue
+            intro = _parse_intro_date(matter.get("introductionDate"))
+            if intro is None or intro < TERM_START:
+                continue
+            matter_id = str(matter.get("matterId"))
+            if matter_id in seen_ids:
+                continue
+            seen_ids.add(matter_id)
+            zoning.append(matter)
+    return zoning
+
+
 async def sweep_matters(resume: bool) -> list[dict[str, Any]]:
     """Page through matters newest-first, stopping once the term start is passed.
 
@@ -226,15 +255,18 @@ async def sweep_matters(resume: bool) -> list[dict[str, Any]]:
             else:
                 crossed = False
 
-    zoning: list[dict[str, Any]] = []
-    for page in pages:
-        for matter in page:
-            if matter.get("matterCategory") != TARGET_CATEGORY:
-                continue
-            intro = _parse_intro_date(matter.get("introductionDate"))
-            if intro is None or intro < TERM_START:
-                continue
-            zoning.append(matter)
+        if not crossed:
+            # We ran out of pages without ever seeing a batch that predates the
+            # term start — either the corpus genuinely ends after TERM_START or
+            # the sweep was truncated / re-ordered. Surface it loudly.
+            logger.warning(
+                "Sweep consumed all %d pages without passing TERM_START (%s); "
+                "the corpus may be truncated.",
+                len(pages),
+                TERM_START.isoformat(),
+            )
+
+    zoning = filter_target_matters(pages)
     logger.info(
         "Found %d %s matters introduced since %s",
         len(zoning),
@@ -290,9 +322,19 @@ async def fetch_details(
 # ---------------------------------------------------------------------------
 
 
+class GeocodeUnavailable(Exception):
+    """The geocoding service failed transiently (rate limit, 5xx, network).
+
+    Distinct from a definitive "no such address" result: a transient failure
+    must never be written into the committed cache as a permanent negative.
+    """
+
+
 class Geocoder:
     def __init__(self, cache: dict[str, dict[str, Any] | None], refresh: bool) -> None:
         self.cache = cache
+        # refresh=True retries cached FAILURES only; cached successes are
+        # always served from the cache.
         self.refresh = refresh
         self._last_nominatim = 0.0
         self._use_google = bool(
@@ -314,13 +356,15 @@ class Geocoder:
                 timeout=aiohttp.ClientTimeout(total=15),
             ) as response:
                 data = await response.json()
-            if data.get("status") != "OK" or not data.get("results"):
-                return None
-            loc = data["results"][0]["geometry"]["location"]
-            return float(loc["lat"]), float(loc["lng"])
-        except Exception:
-            logger.exception("Google geocode failed for %s", query)
+        except Exception as exc:
+            raise GeocodeUnavailable(f"Google geocode failed for {query}") from exc
+        status = data.get("status")
+        if status == "ZERO_RESULTS":
             return None
+        if status != "OK" or not data.get("results"):
+            raise GeocodeUnavailable(f"Google geocode status {status} for {query}")
+        loc = data["results"][0]["geometry"]["location"]
+        return float(loc["lat"]), float(loc["lng"])
 
     async def _nominatim(
         self, session: aiohttp.ClientSession, query: str
@@ -340,31 +384,45 @@ class Geocoder:
                 timeout=aiohttp.ClientTimeout(total=15),
             ) as response:
                 if response.status != 200:
-                    return None
+                    raise GeocodeUnavailable(
+                        f"Nominatim HTTP {response.status} for {query}"
+                    )
                 results = await response.json()
-            if not results:
-                return None
-            return float(results[0]["lat"]), float(results[0]["lon"])
-        except Exception:
-            logger.exception("Nominatim geocode failed for %s", query)
+        except GeocodeUnavailable:
+            raise
+        except Exception as exc:
+            raise GeocodeUnavailable(f"Nominatim geocode failed for {query}") from exc
+        if not results:
             return None
+        return float(results[0]["lat"]), float(results[0]["lon"])
 
     async def geocode(
         self, session: aiohttp.ClientSession, address: str
     ) -> tuple[float, float] | None:
-        """Return (lat, lon) for an address, or None. Uses/updates the cache."""
-        if not self.refresh and address in self.cache:
+        """Return (lat, lon) for an address, or None. Uses/updates the cache.
+
+        Cached successes are always returned. Cached failures are returned as
+        None unless ``refresh`` is set, in which case they are retried. A
+        transient provider outage returns None WITHOUT caching, so the next
+        run retries automatically.
+        """
+        if address in self.cache:
             entry = self.cache[address]
-            if entry is None:
+            if entry is not None:
+                return entry["lat"], entry["lon"]
+            if not self.refresh:
                 return None
-            return entry["lat"], entry["lon"]
 
         query = f"{address}, Chicago, IL"
-        coords: tuple[float, float] | None = None
-        if self._use_google:
-            coords = await self._google(session, query)
-        if coords is None:
-            coords = await self._nominatim(session, query)
+        try:
+            coords: tuple[float, float] | None = None
+            if self._use_google:
+                coords = await self._google(session, query)
+            if coords is None:
+                coords = await self._nominatim(session, query)
+        except GeocodeUnavailable as exc:
+            logger.warning("Geocoder unavailable (not cached): %s", exc)
+            return None
 
         if coords is None or not self._in_chicago(*coords):
             if coords is not None:
@@ -432,30 +490,37 @@ def _ruff_format(path: Path) -> None:
 def write_delay_module(
     ward_stats: dict[int, dict[str, float | int | None]],
     meta: dict[str, Any],
+    path: Path | None = None,
 ) -> None:
+    out_path = path if path is not None else DELAY_OUTPUT_PATH
     lines = _header(
         [
-            f"# Term start: {meta['term_start']}  |  as-of: {meta['computed_at']}",
-            f"# Geocode coverage: {meta['geocode_coverage_pct']}%"
-            f" ({meta['total_matters']} matters)",
-            "WARD_ZONING_DELAY: dict[int, dict[str, float | int]] = {",
+            f"# Term start: {meta.get('term_start')}  |  as-of: {meta.get('computed_at')}",
+            f"# Geocode coverage: {meta.get('geocode_coverage_pct')}%"
+            f" ({meta.get('total_matters')} matters)",
+            "WARD_ZONING_DELAY: dict[int, dict[str, float | int | None]] = {",
         ]
+    )
+    # Emit Python literals (repr), not str/JSON — None medians and any future
+    # bools in the meta must round-trip on import.
+    keys = (
+        "zoning_median_days",
+        "zoning_matter_count",
+        "zoning_stalled_count",
+        "n_resolved",
+        "n_pending",
     )
     for ward in sorted(ward_stats):
         s = ward_stats[ward]
-        lines.append(
-            f"    {ward}: {{"
-            f'"zoning_median_days": {s["zoning_median_days"]}, '
-            f'"zoning_matter_count": {s["zoning_matter_count"]}, '
-            f'"zoning_stalled_count": {s["zoning_stalled_count"]}}},'
-        )
+        body = ", ".join(f'"{k}": {s.get(k)!r}' for k in keys)
+        lines.append(f"    {ward}: {{{body}}},")
     lines.append("}")
     lines.append("")
-    lines.append(f"ZONING_DELAY_META = {json.dumps(meta, indent=4, sort_keys=True)}")
+    lines.append(f"ZONING_DELAY_META = {dict(sorted(meta.items()))!r}")
     lines.append("")
-    DELAY_OUTPUT_PATH.write_text("\n".join(lines))
-    _ruff_format(DELAY_OUTPUT_PATH)
-    logger.info("Wrote %s", DELAY_OUTPUT_PATH)
+    out_path.write_text("\n".join(lines), encoding="utf-8")
+    _ruff_format(out_path)
+    logger.info("Wrote %s", out_path)
 
 
 def write_geocode_module(cache: dict[str, dict[str, Any] | None]) -> None:
@@ -480,7 +545,7 @@ def write_geocode_module(cache: dict[str, dict[str, Any] | None]) -> None:
             lines.append(f"    {address!r}: {ordered!r},")
     lines.append("}")
     lines.append("")
-    GEOCODE_OUTPUT_PATH.write_text("\n".join(lines))
+    GEOCODE_OUTPUT_PATH.write_text("\n".join(lines), encoding="utf-8")
     _ruff_format(GEOCODE_OUTPUT_PATH)
     logger.info("Wrote %s", GEOCODE_OUTPUT_PATH)
 
@@ -502,7 +567,7 @@ def write_candidates_module(candidates: dict[str, list[dict[str, Any]]]) -> None
         lines.append("    ],")
     lines.append("}")
     lines.append("")
-    CANDIDATES_OUTPUT_PATH.write_text("\n".join(lines))
+    CANDIDATES_OUTPUT_PATH.write_text("\n".join(lines), encoding="utf-8")
     _ruff_format(CANDIDATES_OUTPUT_PATH)
     logger.info("Wrote %s", CANDIDATES_OUTPUT_PATH)
 
@@ -535,25 +600,24 @@ async def run(as_of: date, resume: bool, refresh_geocode: bool, force: bool) -> 
     async with aiohttp.ClientSession() as session:
         for matter in zoning_matters:
             title = matter.get("title")
-            record_number = str(matter.get("recordNumber", ""))
+            record_number = str(matter.get("recordNumber") or "")
             address = extract_address_from_title(title)
 
             ward: int | None = None
             coords: tuple[float, float] | None = None
             if address is not None:
-                cached = geocode_cache.get(address) if not refresh_geocode else None
-                if cached is not None and "ward" in cached:
-                    ward = cached.get("ward")
-                    coords = (cached["lat"], cached["lon"]) if cached else None
-                else:
-                    coords = await geocoder.geocode(session, address)
-                    if coords is not None:
-                        ward = assign_ward(coords[0], coords[1], ward_polygons)
-                        geocode_cache[address] = {
-                            "lat": coords[0],
-                            "lon": coords[1],
-                            "ward": ward,
-                        }
+                # The cache stores geocode results; the ward is ALWAYS
+                # recomputed from the coordinates so a ward-boundary update
+                # takes effect on the next run (the cached "ward" field is
+                # informational output, not an input).
+                coords = await geocoder.geocode(session, address)
+                if coords is not None:
+                    ward = assign_ward(coords[0], coords[1], ward_polygons)
+                    geocode_cache[address] = {
+                        "lat": coords[0],
+                        "lon": coords[1],
+                        "ward": ward,
+                    }
 
             if ward is None:
                 unassigned_records.append(record_number)
@@ -603,14 +667,6 @@ async def run(as_of: date, resume: bool, refresh_geocode: bool, force: bool) -> 
         )
 
     ward_stats = compute_ward_delay_stats(enriched, as_of)
-    public_stats = {
-        ward: {
-            "zoning_median_days": s["zoning_median_days"],
-            "zoning_matter_count": s["zoning_matter_count"],
-            "zoning_stalled_count": s["zoning_stalled_count"],
-        }
-        for ward, s in ward_stats.items()
-    }
 
     meta = {
         "term_start": TERM_START.isoformat(),
@@ -623,9 +679,17 @@ async def run(as_of: date, resume: bool, refresh_geocode: bool, force: bool) -> 
         "unassigned_record_numbers": sorted(r for r in unassigned_records if r),
     }
 
-    # Always write the geocode + candidate caches (they never lose data).
+    # The geocode cache only ever gains entries — always safe to write. The
+    # candidate seed, by contrast, is rebuilt from the roster: writing it with
+    # an empty roster (fetch failure) would truncate committed research data.
     write_geocode_module(geocode_cache)
-    write_candidates_module(candidates)
+    if known_alders:
+        write_candidates_module(candidates)
+    else:
+        logger.error(
+            "Alder roster unavailable; NOT rewriting %s (would truncate it).",
+            CANDIDATES_OUTPUT_PATH.name,
+        )
 
     if coverage < COVERAGE_THRESHOLD and not force:
         logger.error(
@@ -636,8 +700,8 @@ async def run(as_of: date, resume: bool, refresh_geocode: bool, force: bool) -> 
         )
         return
 
-    write_delay_module(public_stats, meta)
-    logger.info("Done. Coverage %.1f%%, %d wards.", coverage, len(public_stats))
+    write_delay_module(ward_stats, meta)
+    logger.info("Done. Coverage %.1f%%, %d wards.", coverage, len(ward_stats))
 
 
 def main() -> None:
@@ -645,8 +709,11 @@ def main() -> None:
     parser.add_argument(
         "--as-of",
         type=lambda s: date.fromisoformat(s),
-        default=date.today(),
-        help="Freeze the stalled-in-committee determination at this date (YYYY-MM-DD).",
+        required=True,
+        help=(
+            "Freeze the stalled determination at this date (YYYY-MM-DD). "
+            "Required so the committed data's vintage is always explicit."
+        ),
     )
     parser.add_argument(
         "--no-resume",
@@ -657,7 +724,7 @@ def main() -> None:
     parser.add_argument(
         "--refresh-geocode",
         action="store_true",
-        help="Retry cached geocode failures / re-geocode all addresses.",
+        help="Retry cached geocode failures (successes stay cached).",
     )
     parser.add_argument(
         "--force",

@@ -196,6 +196,7 @@ export interface ScorecardResponse {
   projects: ScorecardProject[];
   entities: ScorecardEntityRow[];
   metrics?: MetricDisplayConfig[];
+  metrics_as_of?: string | null;
 }
 
 export interface UserRoleChangeData {
