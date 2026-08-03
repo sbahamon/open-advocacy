@@ -1,8 +1,10 @@
 export const EMPTY_METRIC_LABEL = '—';
 
-/** Formatting seam — additional variants (percent, currency, …) plug in here. */
+/** Formatting seam — additional variants (currency, …) plug in here. */
 const METRIC_FORMATTERS: Record<string, (value: number) => string> = {
   number: value => value.toLocaleString(),
+  // Backend emits 0–100 (same contract as dataTransformers' 'percentage').
+  percentage: value => `${value.toFixed(1)}%`,
 };
 
 /**

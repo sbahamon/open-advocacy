@@ -137,6 +137,10 @@ class MetricDisplayConfig(BaseModel):
     format: str = "text"
     show_in_table: bool = True
     show_in_tooltip: bool = True
+    # Per-metric data vintage (ISO date) and attribution line. When absent the
+    # frontend falls back to the group-level DashboardConfig.metrics_as_of.
+    as_of: str | None = None
+    source: str | None = None
 
 
 class DashboardConfig(BaseModel):

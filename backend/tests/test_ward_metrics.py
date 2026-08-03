@@ -141,7 +141,9 @@ def test_build_merges_zoning_and_registry():
             ],
         }
     ]
-    merged = build_ward_metric_values(zoning_delay=zoning, registry=registry)
+    merged = build_ward_metric_values(
+        zoning_delay=zoning, registry=registry, affordability={}
+    )
 
     # Ward 1: zoning display keys + registry aggregates; internal keys dropped.
     assert merged[1]["zoning_median_days"] == 128.0
@@ -167,10 +169,36 @@ def test_build_omits_wards_with_no_values():
         }
     }
     # zoning_stalled_count 0 is a real value → ward retained.
-    merged = build_ward_metric_values(zoning_delay=zoning, registry=[])
+    merged = build_ward_metric_values(
+        zoning_delay=zoning, registry=[], affordability={}
+    )
     assert merged[3] == {"zoning_matter_count": 1, "zoning_stalled_count": 0}
 
 
+def test_build_merges_affordability_display_keys_only():
+    affordability: dict[int, dict[str, Any]] = {
+        4: {
+            "neighborhoods": "Printer's Row, Kenwood",
+            "affordable_share_pct": 19.68,
+            "affordability_rank_change": 5,
+            # Context keys stay module-only.
+            "total_listings_2026": 1077,
+            "affordability_rank_2026": 21,
+            "median_rent_2026": None,
+        }
+    }
+    merged = build_ward_metric_values(
+        zoning_delay={}, registry=[], affordability=affordability
+    )
+    # A ward present only in the affordability data still appears.
+    assert merged[4] == {
+        "affordable_share_pct": 19.68,
+        "affordability_rank_change": 5,
+    }
+
+
 def test_build_with_defaults_returns_dict():
-    # Uses committed WARD_ZONING_DELAY + empty ALDER_UNITS_REGISTRY; must not raise.
-    assert isinstance(build_ward_metric_values(), dict)
+    # Uses the committed WARD_ZONING_DELAY / WARD_AFFORDABILITY plus the empty
+    # ALDER_UNITS_REGISTRY; must not raise.
+    merged = build_ward_metric_values()
+    assert isinstance(merged, dict)

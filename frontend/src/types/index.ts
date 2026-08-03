@@ -70,6 +70,10 @@ export interface MetricDisplayConfig {
   format?: string;
   show_in_table?: boolean;
   show_in_tooltip?: boolean;
+  /** Per-metric data vintage (ISO date); falls back to the group-level metrics_as_of. */
+  as_of?: string | null;
+  /** Attribution line for metrics from a non-default data source. */
+  source?: string | null;
 }
 
 export interface DashboardConfig {

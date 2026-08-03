@@ -224,20 +224,23 @@ async def import_scorecard_projects() -> None:
                 existing_position = (
                     existing_config.position if existing_config else None
                 )
-                existing_metric_keys = (
-                    {m.key for m in existing_config.metrics}
+                # Compare full descriptors, not just key sets: a changed label,
+                # format, show_in_table flag, or vintage must also re-sync an
+                # existing DB (a key-set-only check silently ignored those).
+                existing_metrics_dump = (
+                    [m.model_dump() for m in existing_config.metrics]
                     if existing_config and existing_config.metrics
-                    else set()
+                    else []
                 )
-                desired_metric_keys = (
-                    {m.key for m in project_metrics} if project_metrics else set()
+                desired_metrics_dump = (
+                    [m.model_dump() for m in project_metrics] if project_metrics else []
                 )
                 existing_as_of = (
                     existing_config.metrics_as_of if existing_config else None
                 )
                 if (
                     existing_position != position
-                    or existing_metric_keys != desired_metric_keys
+                    or existing_metrics_dump != desired_metrics_dump
                     or existing_as_of != project_metrics_as_of
                 ):
                     updated_config = DashboardConfig(
@@ -267,8 +270,8 @@ async def import_scorecard_projects() -> None:
                         slug,
                         existing_position,
                         position,
-                        sorted(existing_metric_keys),
-                        sorted(desired_metric_keys),
+                        sorted(m["key"] for m in existing_metrics_dump),
+                        sorted(m["key"] for m in desired_metrics_dump),
                     )
             else:
                 project = await project_service.create_project(
