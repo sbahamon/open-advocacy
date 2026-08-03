@@ -34,6 +34,7 @@ python -m scripts.fetch_elms_scorecard_data           # Fetch/refresh City Clerk
 python -m scripts.fetch_openstates_il_scorecard_data  # Fetch/refresh IL General Assembly sponsorship data (writes app/data/il_scorecard_data.py)
 python -m scripts.fetch_ward_zoning_data              # Fetch ward zoning data from Cityscape API (writes app/data/ward_zoning_data.py)
 python -m scripts.fetch_affordability_data            # Regenerate ward affordability data from docs/data/zillow-affordability/ CSVs (writes app/data/ward_affordability_data.py)
+python -m scripts.merge_units_registry <research.json> # Merge reviewed bonus/lost-units research into app/data/alder_units_registry.py (see docs/alder-units-research-protocol.md)
 
 # Code quality
 poetry run ruff check .                   # Lint

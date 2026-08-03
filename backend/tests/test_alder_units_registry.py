@@ -1,20 +1,20 @@
 """Validation test for the curated alder units registry (the CI gatekeeper).
 
-Passes trivially while ``ALDER_UNITS_REGISTRY`` is empty (Phase 1). Once the
-Phase 2 research workflow appends entries, these checks enforce the curation
-rules documented in ``app/data/alder_units_registry.py``.
+Passes trivially while ``ALDER_UNITS_REGISTRY`` is empty. Once the research
+workflow appends entries, these checks enforce the curation rules documented
+in ``app/data/alder_units_registry.py``. The rules themselves live in
+``app.imports.sources.alder_units_validation`` — shared with
+``scripts/merge_units_registry.py`` so a registry that merges cleanly cannot
+then fail CI.
 """
-
-import re
-from datetime import date
 
 import pytest
 
 from app.data.alder_units_registry import ALDER_UNITS_REGISTRY
-from app.imports.sources.chicago_city_clerk_elms import normalize_name
-
-VALID_KINDS = {"upzone", "downzone", "shrunk_development"}
-RECORD_NUMBER_RE = re.compile(r"^[A-Z]{1,2}\d{4}-\d+$")
+from app.imports.sources.alder_units_validation import (
+    validate_entry,
+    validate_registry,
+)
 
 # Known alders come from the same committed source the scorecard fetch uses.
 # Empty registry never exercises this, but keep resolution honest when populated.
@@ -28,57 +28,16 @@ except ImportError:  # pragma: no cover
     KNOWN_ALDER_NAMES = set()
 
 
-def _iso(value: str) -> date:
-    return date.fromisoformat(value)
+def test_registry_is_valid_as_a_whole():
+    errors = validate_registry(ALDER_UNITS_REGISTRY, known_alders=KNOWN_ALDER_NAMES)
+    assert not errors, "\n".join(errors)
 
 
-def test_no_duplicate_wards():
-    wards = [entry["ward"] for entry in ALDER_UNITS_REGISTRY]
-    assert len(wards) == len(set(wards)), "duplicate ward entries in registry"
-
-
-@pytest.mark.parametrize("entry", ALDER_UNITS_REGISTRY)
+@pytest.mark.parametrize(
+    "entry",
+    ALDER_UNITS_REGISTRY,
+    ids=[f"ward-{entry.get('ward')}" for entry in ALDER_UNITS_REGISTRY],
+)
 def test_registry_entry_is_valid(entry):
-    ward = entry["ward"]
-    assert isinstance(ward, int) and 1 <= ward <= 50, f"invalid ward {ward}"
-
-    elected = _iso(entry["elected"])
-
-    # Alder resolves against the known roster (skip only if no roster available).
-    if KNOWN_ALDER_NAMES:
-        assert normalize_name(entry["alder"]) in KNOWN_ALDER_NAMES, (
-            f"alder '{entry['alder']}' does not resolve to a known alder"
-        )
-
-    assert entry["items"], "registry entry must have at least one item"
-    for item in entry["items"]:
-        assert item["kind"] in VALID_KINDS, f"invalid kind {item['kind']}"
-
-        delta = item["units_delta"]
-        assert isinstance(delta, int) and delta > 0, (
-            f"units_delta must be a positive int, got {delta}"
-        )
-
-        item_date = _iso(item["date"])
-        assert item_date >= elected, (
-            f"item date {item_date} precedes alder election {elected}"
-        )
-
-        first_public = item.get("first_public_date")
-        if first_public is not None:
-            assert _iso(first_public) <= item_date, (
-                "first_public_date must be on or before date"
-            )
-
-        record_number = item.get("elms_record_number")
-        if record_number is not None:
-            assert RECORD_NUMBER_RE.match(record_number), (
-                f"bad record number {record_number}"
-            )
-
-        citations = item.get("citations")
-        assert citations, "each item requires at least one citation"
-        for url in citations:
-            assert url.startswith(("http://", "https://")), (
-                f"citation must be an http(s) URL, got {url}"
-            )
+    errors = validate_entry(entry, known_alders=KNOWN_ALDER_NAMES)
+    assert not errors, "\n".join(errors)
