@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ZoningAuditResponse } from '../../types';
 
@@ -11,7 +11,11 @@ vi.mock('../../services/jurisdictions', () => ({
   jurisdictionService: { getDistrictGeoJSON: vi.fn() },
 }));
 vi.mock('./WardChoroplethMap', () => ({
-  default: () => <div data-testid="choropleth" />,
+  default: ({ onSelectWard }: { onSelectWard: (w: number) => void }) => (
+    <div data-testid="choropleth">
+      <button onClick={() => onSelectWard(35)}>select-ward-35</button>
+    </div>
+  ),
 }));
 
 import ScorecardAudit from './index';
@@ -30,6 +34,7 @@ const mockAudit: ZoningAuditResponse = {
     near_boundary_threshold_m: 30.0,
     unassigned_record_numbers: ['O2026-0000009'],
   },
+  affordability_meta: { as_of: '2026-07-28', source: 'Community Zillow survey' },
   wards: Array.from({ length: 50 }, (_, i) => ({
     ward: i + 1,
     alder_name: i === 34 ? 'Quezada, Anthony J.' : null,
@@ -39,6 +44,18 @@ const mockAudit: ZoningAuditResponse = {
     n_resolved: 1,
     n_pending: 1,
     matters: [],
+    affordability:
+      i === 34
+        ? {
+            neighborhoods: 'Logan Square',
+            affordable_share_pct: 4.26,
+            affordable_listings_2026: 21,
+            total_listings_2026: 493,
+            affordability_rank_2025: 20,
+            affordability_rank_2026: 21,
+            affordability_rank_change: -1,
+          }
+        : null,
   })),
   unassigned_matters: [
     {
@@ -80,6 +97,27 @@ describe('ScorecardAudit', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(/Select a ward on the map/)
+    ).toBeInTheDocument();
+  });
+
+  it('shows the affordability card AND the zoning docket on ward selection', async () => {
+    renderPage();
+    const selectButton = await screen.findByText('select-ward-35');
+    fireEvent.click(selectButton);
+    // Affordability card...
+    expect(await screen.findByText(/Logan Square/)).toBeInTheDocument();
+    expect(screen.getByText('4.3% (21 of 493)')).toBeInTheDocument();
+    expect(screen.getByText('20 → 21 (-1)')).toBeInTheDocument();
+    // ...and the zoning docket area, together.
+    expect(
+      screen.getByText(/No zoning reclassifications recorded for Ward 35/)
+    ).toBeInTheDocument();
+  });
+
+  it('shows the affordability source line in the meta block', async () => {
+    renderPage();
+    expect(
+      await screen.findByText(/Affordability: Community Zillow survey; data as of 2026-07-28/)
     ).toBeInTheDocument();
   });
 

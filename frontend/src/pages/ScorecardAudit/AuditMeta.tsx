@@ -3,11 +3,12 @@ import { Box, Collapse, Link as MuiLink, Typography } from '@mui/material';
 
 interface AuditMetaProps {
   meta: Record<string, unknown>;
+  affordabilityMeta?: Record<string, unknown>;
   unassignedCount: number;
 }
 
 /** Coverage and caveat block: as-of, geocode coverage, near-boundary counts. */
-const AuditMeta: React.FC<AuditMetaProps> = ({ meta, unassignedCount }) => {
+const AuditMeta: React.FC<AuditMetaProps> = ({ meta, affordabilityMeta, unassignedCount }) => {
   const [showUnassigned, setShowUnassigned] = useState(false);
   const unassignedRecords = Array.isArray(meta.unassigned_record_numbers)
     ? (meta.unassigned_record_numbers as string[])
@@ -37,6 +38,13 @@ const AuditMeta: React.FC<AuditMetaProps> = ({ meta, unassignedCount }) => {
           {unassignedRecords.join(', ')}
         </Typography>
       </Collapse>
+      {affordabilityMeta?.source != null && (
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+          Affordability: {String(affordabilityMeta.source)}; data as of{' '}
+          {String(affordabilityMeta.as_of ?? '—')}. Hand-drawn boundaries approximate
+          the official ward map; small wards&apos; percentages are noisy.
+        </Typography>
+      )}
     </Box>
   );
 };

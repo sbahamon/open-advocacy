@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   colorForValue,
+  DIVERGING_COLORS,
+  divergingColorForValue,
   MISSING_COLOR,
   quantileBins,
   SCALE_COLORS,
@@ -29,5 +31,24 @@ describe('colorForValue', () => {
     expect(colorForValue(null, edges)).toBe(MISSING_COLOR);
     expect(colorForValue(undefined, edges)).toBe(MISSING_COLOR);
     expect(colorForValue(50, [])).toBe(MISSING_COLOR);
+  });
+});
+
+describe('divergingColorForValue', () => {
+  it('maps negative to the warm arm and positive to the cool arm', () => {
+    expect(divergingColorForValue(-10, 10)).toBe(DIVERGING_COLORS[0]);
+    expect(divergingColorForValue(-3, 10)).toBe(DIVERGING_COLORS[1]);
+    expect(divergingColorForValue(3, 10)).toBe(DIVERGING_COLORS[3]);
+    expect(divergingColorForValue(10, 10)).toBe(DIVERGING_COLORS[4]);
+  });
+
+  it('puts zero on the neutral midpoint, never a hue', () => {
+    expect(divergingColorForValue(0, 10)).toBe(DIVERGING_COLORS[2]);
+    expect(divergingColorForValue(5, 0)).toBe(DIVERGING_COLORS[2]);
+  });
+
+  it('renders missing values with the missing color', () => {
+    expect(divergingColorForValue(null, 10)).toBe(MISSING_COLOR);
+    expect(divergingColorForValue(undefined, 10)).toBe(MISSING_COLOR);
   });
 });

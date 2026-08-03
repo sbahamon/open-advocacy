@@ -191,3 +191,50 @@ class TestGetZoningAudit:
                 == (WARD_ZONING_DELAY[35]["zoning_median_days"])
             )
             assert len(ward35.matters) == ward35.zoning_matter_count
+
+
+class TestAffordabilityOnAudit:
+    @pytest.mark.asyncio
+    async def test_wards_carry_affordability_and_meta(self):
+        from app.data.ward_affordability_data import (
+            AFFORDABILITY_META,
+            WARD_AFFORDABILITY,
+        )
+
+        jurisdiction_id = uuid4()
+        project = make_project(slug="test", jurisdiction_id=jurisdiction_id)
+        entity = make_entity(name="Alder", jurisdiction_id=jurisdiction_id)
+        entity.district_name = "Ward 1"
+        service = _service(projects=[project], entities=[entity])
+
+        audit = await service.get_zoning_audit(uuid4(), "AHIL")
+
+        assert audit is not None
+        assert audit.affordability_meta.get("as_of") == AFFORDABILITY_META["as_of"]
+        ward1 = next(w for w in audit.wards if w.ward == 1)
+        assert ward1.affordability is not None
+        assert (
+            ward1.affordability.affordable_share_pct
+            == WARD_AFFORDABILITY[1]["affordable_share_pct"]
+        )
+        assert (
+            ward1.affordability.total_listings_2026
+            == WARD_AFFORDABILITY[1]["total_listings_2026"]
+        )
+
+    def test_missing_ward_yields_none(self):
+        from app.services.zoning_audit_service import _ward_affordability
+
+        assert _ward_affordability(999) is None
+
+    def test_unknown_module_keys_are_filtered(self, monkeypatch):
+        import app.services.zoning_audit_service as svc
+
+        monkeypatch.setitem(
+            svc.WARD_AFFORDABILITY,
+            999,
+            {"affordable_share_pct": 5.0, "future_key": "ignored"},
+        )
+        row = svc._ward_affordability(999)
+        assert row is not None
+        assert row.affordable_share_pct == 5.0

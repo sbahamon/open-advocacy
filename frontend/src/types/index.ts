@@ -100,6 +100,23 @@ export interface ZoningAuditMatter {
   withdrawn: boolean;
 }
 
+export interface WardAffordability {
+  neighborhoods?: string | null;
+  affordable_share_pct?: number | null;
+  affordable_share_pct_2025?: number | null;
+  affordable_listings_2025?: number | null;
+  affordable_listings_2026?: number | null;
+  total_listings_2025?: number | null;
+  total_listings_2026?: number | null;
+  affordability_rank_2025?: number | null;
+  affordability_rank_2026?: number | null;
+  affordability_rank_change?: number | null;
+  median_rent_2025?: number | null;
+  median_rent_2026?: number | null;
+  median_sale_price_2025?: number | null;
+  median_sale_price_2026?: number | null;
+}
+
 export interface ZoningAuditWard {
   ward: number;
   alder_name?: string | null;
@@ -109,12 +126,14 @@ export interface ZoningAuditWard {
   n_resolved: number;
   n_pending: number;
   matters: ZoningAuditMatter[];
+  affordability?: WardAffordability | null;
 }
 
 export interface ZoningAuditResponse {
   group_name: string;
   jurisdiction_id?: string | null;
   meta: Record<string, unknown>;
+  affordability_meta?: Record<string, unknown>;
   wards: ZoningAuditWard[];
   unassigned_matters: ZoningAuditMatter[];
 }
