@@ -16,11 +16,14 @@ import WardChoroplethMap from './WardChoroplethMap';
 import WardMattersTable from './WardMattersTable';
 import MetricToggle from './MetricToggle';
 import AuditMeta from './AuditMeta';
+import AffordabilityCard from './AffordabilityCard';
 import { AuditColorMetric } from './wardColorScale';
 
 /**
- * Audit drill-down behind the scorecard's ward zoning metrics: a choropleth
- * of the 50 wards plus the per-matter records each ward's numbers come from.
+ * Ward map & audit behind the scorecard's ward metrics: a choropleth of the
+ * 50 wards (zoning delay + affordability survey) plus, per ward, the
+ * affordability context card and the per-matter records the zoning numbers
+ * come from.
  */
 const ScorecardAudit: React.FC = () => {
   const { groupSlug } = useParams<{ groupSlug: string }>();
@@ -77,15 +80,16 @@ const ScorecardAudit: React.FC = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        Ward Zoning Delay — Audit
+        Ward Map &amp; Audit
       </Typography>
       <Typography color="text.secondary" sx={{ mb: 2 }}>
-        Every number on the{' '}
+        Every ward metric on the{' '}
         <MuiLink component={RouterLink} to={`/scorecard/${groupSlug}`}>
           {audit.group_name} scorecard
         </MuiLink>{' '}
-        zoning columns traces back to the City Council matters below. Click a ward to
-        see its docket.
+        — zoning delays and the community affordability survey — mapped by ward. Click
+        a ward for its survey context and the City Council matters behind its zoning
+        numbers.
       </Typography>
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
@@ -100,7 +104,11 @@ const ScorecardAudit: React.FC = () => {
         onSelectWard={setSelectedWard}
       />
 
-      <AuditMeta meta={audit.meta} unassignedCount={audit.unassigned_matters.length} />
+      <AuditMeta
+        meta={audit.meta}
+        affordabilityMeta={audit.affordability_meta}
+        unassignedCount={audit.unassigned_matters.length}
+      />
 
       {selected ? (
         <Box sx={{ mt: 3 }}>
@@ -108,7 +116,8 @@ const ScorecardAudit: React.FC = () => {
             Ward {selected.ward}
             {selected.alder_name ? ` — ${selected.alder_name}` : ''}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <AffordabilityCard affordability={selected.affordability} />
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
             Median delay {selected.zoning_median_days ?? '—'} days over{' '}
             {selected.n_resolved} resolved matters; {selected.n_pending} pending,{' '}
             {selected.zoning_stalled_count} stalled &gt;180 days.
@@ -117,7 +126,8 @@ const ScorecardAudit: React.FC = () => {
         </Box>
       ) : (
         <Typography color="text.secondary" sx={{ mt: 3 }}>
-          Select a ward on the map to see the matters behind its numbers.
+          Select a ward on the map to see its affordability context and the matters
+          behind its zoning numbers.
         </Typography>
       )}
     </Container>

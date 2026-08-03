@@ -23,6 +23,7 @@ from app.imports.sources.zoning_delay import (
     parse_elms_date,
 )
 from app.models.pydantic.models import (
+    WardAffordability,
     ZoningAuditMatter,
     ZoningAuditResponse,
     ZoningAuditWard,
@@ -46,6 +47,12 @@ try:  # pragma: no cover - trivial import guard
 except ImportError:  # pragma: no cover
     WARD_ZONING_DELAY = {}
     ZONING_DELAY_META = {}
+
+try:  # pragma: no cover - trivial import guard
+    from app.data.ward_affordability_data import AFFORDABILITY_META, WARD_AFFORDABILITY
+except ImportError:  # pragma: no cover
+    WARD_AFFORDABILITY = {}
+    AFFORDABILITY_META = {}
 
 
 def derive_matter_flags(matter: dict[str, Any], as_of: date) -> ZoningAuditMatter:
@@ -91,6 +98,20 @@ def derive_matter_flags(matter: dict[str, Any], as_of: date) -> ZoningAuditMatte
         stalled=stalled,
         pending=pending,
         withdrawn=withdrawn,
+    )
+
+
+def _ward_affordability(ward: int) -> WardAffordability | None:
+    """The ward's survey context, or None when the ward has no survey row.
+
+    Keys are filtered to the model's fields so future additions to the
+    generated module can't break the endpoint.
+    """
+    data = WARD_AFFORDABILITY.get(ward)
+    if data is None:
+        return None
+    return WardAffordability.model_validate(
+        {k: v for k, v in data.items() if k in WardAffordability.model_fields}
     )
 
 
@@ -145,6 +166,7 @@ class ZoningAuditService:
                     n_resolved=int(stats.get("n_resolved") or 0),
                     n_pending=int(stats.get("n_pending") or 0),
                     matters=matters,
+                    affordability=_ward_affordability(ward),
                 )
             )
 
@@ -152,6 +174,7 @@ class ZoningAuditService:
             group_name=group_name,
             jurisdiction_id=jurisdiction_id,
             meta=dict(ZONING_DELAY_META),
+            affordability_meta=dict(AFFORDABILITY_META),
             wards=wards,
             unassigned_matters=[
                 derive_matter_flags(m, as_of) for m in UNASSIGNED_ZONING_MATTERS

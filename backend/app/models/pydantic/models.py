@@ -232,6 +232,25 @@ class ZoningAuditMatter(BaseModel):
     withdrawn: bool = False
 
 
+class WardAffordability(BaseModel):
+    """Per-ward context from the community Zillow affordability survey."""
+
+    neighborhoods: str | None = None
+    affordable_share_pct: float | None = None
+    affordable_share_pct_2025: float | None = None
+    affordable_listings_2025: int | None = None
+    affordable_listings_2026: int | None = None
+    total_listings_2025: int | None = None
+    total_listings_2026: int | None = None
+    affordability_rank_2025: int | None = None
+    affordability_rank_2026: int | None = None
+    affordability_rank_change: int | None = None
+    median_rent_2025: int | None = None
+    median_rent_2026: int | None = None
+    median_sale_price_2025: int | None = None
+    median_sale_price_2026: int | None = None
+
+
 class ZoningAuditWard(BaseModel):
     ward: int
     alder_name: str | None = None
@@ -241,6 +260,7 @@ class ZoningAuditWard(BaseModel):
     n_resolved: int = 0
     n_pending: int = 0
     matters: list[ZoningAuditMatter] = []
+    affordability: WardAffordability | None = None
 
 
 class ZoningAuditResponse(BaseModel):
@@ -249,6 +269,9 @@ class ZoningAuditResponse(BaseModel):
     # ZONING_DELAY_META passthrough: as-of/term dates, coverage, near-boundary
     # and unassigned record-number lists.
     meta: dict[str, Any]
+    # AFFORDABILITY_META passthrough: survey as-of, source attribution,
+    # collection windows, citywide shares. Empty when no survey data exists.
+    affordability_meta: dict[str, Any] = {}
     wards: list[ZoningAuditWard]
     unassigned_matters: list[ZoningAuditMatter] = []
 
