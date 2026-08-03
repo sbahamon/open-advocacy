@@ -178,8 +178,17 @@ curl -s localhost:8000/api/scorecard/strong-towns-chicago-chicago-city-council \
 
 ## 4. Auditor checklist
 
+> **First stop: the in-app audit page.** `/scorecard/{group-slug}/audit` renders a
+> ward choropleth plus every ward's underlying matter list (record numbers linked to
+> eLMS, introduction/final-action dates, derived span, stalled/withdrawn/near-boundary
+> flags) from the committed `backend/app/data/ward_zoning_matters.py`, served by
+> `GET /api/scorecard/{group-slug}/zoning-audit`. Steps 1 and 6 below can be done
+> entirely from that page; the CI test
+> `tests/test_zoning_audit_service.py::TestCommittedDataReconciliation` additionally
+> proves the per-matter records reproduce `WARD_ZONING_DELAY` bit-for-bit on every run.
+
 1. **Re-derive one ward's median by hand.** Pick a ward, pull its resolved matters from the
-   cache (`backend/.elms_cache/matters/*.json`), compute `finalActionDate − introductionDate`
+   audit page (or `backend/.elms_cache/matters/*.json`), compute `finalActionDate − introductionDate`
    for each, take the median, and compare to `WARD_ZONING_DELAY[ward]["zoning_median_days"]`.
    Confirm withdrawn matters and negative spans are excluded. (Sentinel dates like
    `1900-01-01` are guarded against in code but have zero occurrences in the current

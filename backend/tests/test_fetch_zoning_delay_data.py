@@ -87,6 +87,52 @@ class TestWriteDelayModule:
         assert module["ZONING_DELAY_META"]["note"] is None
 
 
+class TestWriteMattersModule:
+    def test_matters_round_trip_importably(self, tmp_path):
+        from scripts.fetch_zoning_delay_data import write_matters_module
+
+        out = tmp_path / "matters.py"
+        ward_matters = {
+            35: [
+                {
+                    "record_number": "O2026-0012345",
+                    "matter_guid": "abc-123",
+                    "title": "Zoning Reclassification at 1 N Test St",
+                    "address": "1 N Test St",
+                    "introduction_date": "2026-01-21T00:00:00",
+                    "final_action_date": None,
+                    "status": "4-In Committee",
+                    "sub_status": None,
+                    "lat": 41.9,
+                    "lon": -87.7,
+                    "near_boundary": True,
+                }
+            ]
+        }
+        unassigned = [
+            {
+                "record_number": "O2026-0099999",
+                "matter_guid": "def-456",
+                "title": "Unparseable title",
+                "address": None,
+                "introduction_date": "2026-02-01T00:00:00",
+                "final_action_date": None,
+                "status": "1-Introduced",
+                "sub_status": None,
+                "lat": None,
+                "lon": None,
+                "near_boundary": False,
+            }
+        ]
+        write_matters_module(ward_matters, unassigned, path=out)
+        module = runpy.run_path(str(out))
+        assert module["WARD_ZONING_MATTERS"] == ward_matters
+        assert module["UNASSIGNED_ZONING_MATTERS"] == unassigned
+        # None and bools must be Python literals, not JSON null/true.
+        assert module["WARD_ZONING_MATTERS"][35][0]["near_boundary"] is True
+        assert module["UNASSIGNED_ZONING_MATTERS"][0]["address"] is None
+
+
 def _no_network_session() -> aiohttp.ClientSession:
     """A session stand-in; tests monkeypatch the provider methods instead."""
     return cast(aiohttp.ClientSession, object())

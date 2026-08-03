@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link as RouterLink, useParams } from 'react-router-dom';
 import {
   Box,
   CircularProgress,
   Container,
+  Link as MuiLink,
   Typography,
   useMediaQuery,
   useTheme,
@@ -170,6 +171,13 @@ const Scorecard: React.FC = () => {
       )}
 
       <MetricNotes metrics={data.metrics} metricsAsOf={data.metrics_as_of} />
+      {data.metrics?.some(m => m.key.startsWith('zoning_')) && (
+        <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
+          <MuiLink component={RouterLink} to={`/scorecard/${groupSlug}/audit`}>
+            Audit this data → see the City Council matters behind the zoning columns
+          </MuiLink>
+        </Typography>
+      )}
     </Container>
   );
 };

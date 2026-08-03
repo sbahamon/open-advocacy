@@ -86,3 +86,58 @@ class TestScorecardEndpoint:
         body = response.json()
         assert body["projects"] == []
         assert body["entities"] == []
+
+
+class TestZoningAuditEndpoint:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        from app.services.service_factory import get_zoning_audit_service
+        from app.services.zoning_audit_service import ZoningAuditService
+
+        self.group = Group(id=uuid4(), name="Test Group")
+        self.audit_service = MagicMock(spec=ZoningAuditService)
+        app.dependency_overrides[get_zoning_audit_service] = lambda: self.audit_service
+        app.dependency_overrides[get_group_service] = lambda: (
+            _build_group_service_returning(self.group)
+        )
+        yield
+        app.dependency_overrides.clear()
+
+    @pytest.mark.asyncio
+    async def test_unknown_group_slug_returns_404(self):
+        app.dependency_overrides[get_group_service] = lambda: (
+            _build_group_service_returning(None)
+        )
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/api/scorecard/nope/zoning-audit")
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_non_chicago_group_returns_404(self):
+        self.audit_service.get_zoning_audit = AsyncMock(return_value=None)
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/api/scorecard/il-house/zoning-audit")
+        assert response.status_code == 404
+        assert "zoning-audit" in response.json()["detail"]
+
+    @pytest.mark.asyncio
+    async def test_chicago_group_returns_audit_payload(self):
+        from app.models.pydantic.models import ZoningAuditResponse, ZoningAuditWard
+
+        self.audit_service.get_zoning_audit = AsyncMock(
+            return_value=ZoningAuditResponse(
+                group_name="Test Group",
+                jurisdiction_id=uuid4(),
+                meta={"computed_at": "2026-08-02", "total_matters": 1},
+                wards=[ZoningAuditWard(ward=1)],
+            )
+        )
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/api/scorecard/chi/zoning-audit")
+        assert response.status_code == 200
+        body = response.json()
+        assert body["meta"]["computed_at"] == "2026-08-02"
+        assert body["wards"][0]["ward"] == 1

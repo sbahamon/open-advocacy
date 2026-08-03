@@ -95,6 +95,7 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "app" / "data"
 DELAY_OUTPUT_PATH = DATA_DIR / "ward_zoning_delay_data.py"
 GEOCODE_OUTPUT_PATH = DATA_DIR / "zoning_geocode_cache.py"
 CANDIDATES_OUTPUT_PATH = DATA_DIR / "alder_zoning_candidates.py"
+MATTERS_OUTPUT_PATH = DATA_DIR / "ward_zoning_matters.py"
 
 
 # ---------------------------------------------------------------------------
@@ -550,6 +551,44 @@ def write_geocode_module(cache: dict[str, dict[str, Any] | None]) -> None:
     logger.info("Wrote %s", GEOCODE_OUTPUT_PATH)
 
 
+def write_matters_module(
+    ward_matters: dict[int, list[dict[str, Any]]],
+    unassigned_matters: list[dict[str, Any]],
+    path: Path | None = None,
+) -> None:
+    """Write the per-matter audit module consumed by the zoning-audit endpoint.
+
+    Raw dates/status travel as-is; span/stalled derivation happens server-side
+    against the frozen as-of date so the audit table provably matches
+    ``compute_ward_delay_stats`` semantics.
+    """
+    out_path = path if path is not None else MATTERS_OUTPUT_PATH
+    lines = _header(
+        [
+            "# Per-matter audit records behind WARD_ZONING_DELAY. Wards were",
+            "# assigned by point-in-polygon; matters that could not be assigned",
+            "# are listed separately (never guessed into a ward).",
+            "WARD_ZONING_MATTERS: dict[int, list[dict]] = {",
+        ]
+    )
+    # Emit Python literals (repr), not JSON — None values must round-trip.
+    for ward in sorted(ward_matters):
+        lines.append(f"    {ward}: [")
+        for item in ward_matters[ward]:
+            lines.append(f"        {item!r},")
+        lines.append("    ],")
+    lines.append("}")
+    lines.append("")
+    lines.append("UNASSIGNED_ZONING_MATTERS: list[dict] = [")
+    for item in unassigned_matters:
+        lines.append(f"    {item!r},")
+    lines.append("]")
+    lines.append("")
+    out_path.write_text("\n".join(lines), encoding="utf-8")
+    _ruff_format(out_path)
+    logger.info("Wrote %s", out_path)
+
+
 def write_candidates_module(candidates: dict[str, list[dict[str, Any]]]) -> None:
     lines = _header(
         [
@@ -596,6 +635,8 @@ async def run(as_of: date, resume: bool, refresh_geocode: bool, force: bool) -> 
     candidates: dict[str, list[dict[str, Any]]] = {}
     unmatched_sponsors: set[str] = set()
     near_boundary_records: list[str] = []
+    ward_matters: dict[int, list[dict[str, Any]]] = {}
+    unassigned_matters: list[dict[str, Any]] = []
 
     async with aiohttp.ClientSession() as session:
         for matter in zoning_matters:
@@ -619,6 +660,7 @@ async def run(as_of: date, resume: bool, refresh_geocode: bool, force: bool) -> 
                         "ward": ward,
                     }
 
+            near_boundary = False
             if ward is None:
                 unassigned_records.append(record_number)
             elif coords is not None:
@@ -627,8 +669,27 @@ async def run(as_of: date, resume: bool, refresh_geocode: bool, force: bool) -> 
                 )
                 if distance is not None and distance < NEAR_BOUNDARY_THRESHOLD_M:
                     near_boundary_records.append(record_number)
+                    near_boundary = True
 
             enriched.append({**matter, "ward": ward})
+
+            matter_record: dict[str, Any] = {
+                "record_number": record_number,
+                "matter_guid": str(matter.get("matterId")),
+                "title": title,
+                "address": address,
+                "introduction_date": matter.get("introductionDate"),
+                "final_action_date": matter.get("finalActionDate"),
+                "status": matter.get("status"),
+                "sub_status": matter.get("subStatus"),
+                "lat": coords[0] if coords is not None else None,
+                "lon": coords[1] if coords is not None else None,
+                "near_boundary": near_boundary,
+            }
+            if ward is None:
+                unassigned_matters.append(matter_record)
+            else:
+                ward_matters.setdefault(ward, []).append(matter_record)
 
             # Candidate seed from the detail payload (sponsors).
             detail = details.get(str(matter.get("matterId")))
@@ -700,7 +761,17 @@ async def run(as_of: date, resume: bool, refresh_geocode: bool, force: bool) -> 
         )
         return
 
+    # Newest-introduced first within each ward; None dates sort last.
+    for matters_list in ward_matters.values():
+        matters_list.sort(
+            key=lambda m: str(m.get("introduction_date") or ""), reverse=True
+        )
+    unassigned_matters.sort(
+        key=lambda m: str(m.get("introduction_date") or ""), reverse=True
+    )
+
     write_delay_module(ward_stats, meta)
+    write_matters_module(ward_matters, unassigned_matters)
     logger.info("Done. Coverage %.1f%%, %d wards.", coverage, len(ward_stats))
 
 
