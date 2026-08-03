@@ -33,6 +33,7 @@ python -m scripts.import_scorecard_projects   # Seed scorecard projects from Cit
 python -m scripts.fetch_elms_scorecard_data           # Fetch/refresh City Clerk eLMS vote data (writes app/data/elms_scorecard_data.py)
 python -m scripts.fetch_openstates_il_scorecard_data  # Fetch/refresh IL General Assembly sponsorship data (writes app/data/il_scorecard_data.py)
 python -m scripts.fetch_ward_zoning_data              # Fetch ward zoning data from Cityscape API (writes app/data/ward_zoning_data.py)
+python -m scripts.fetch_affordability_data            # Regenerate ward affordability data from docs/data/zillow-affordability/ CSVs (writes app/data/ward_affordability_data.py)
 
 # Code quality
 poetry run ruff check .                   # Lint

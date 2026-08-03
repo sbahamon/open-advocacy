@@ -43,11 +43,59 @@ describe('MetricNotes', () => {
 
   it('renders the data vintage when provided', () => {
     render(<MetricNotes metrics={METRICS} metricsAsOf="2026-07-23" />);
-    expect(screen.getByText(/as of 2026-07-23/)).toBeInTheDocument();
+    // Exact legacy string — sourceless metrics must keep this line verbatim.
+    expect(screen.getByText('Zoning metric data as of 2026-07-23.')).toBeInTheDocument();
   });
 
   it('omits the vintage line when not provided', () => {
     render(<MetricNotes metrics={METRICS} metricsAsOf={null} />);
     expect(screen.queryByText(/as of/)).not.toBeInTheDocument();
+  });
+
+  it('renders one attribution line per source with its own vintage', () => {
+    const withSource: MetricDisplayConfig[] = [
+      ...METRICS,
+      {
+        key: 'affordable_share_pct',
+        label: 'Affordable Listings (% at 60% AMI)',
+        description: 'Share of listings affordable at 60% AMI.',
+        show_in_table: true,
+        as_of: '2026-07-28',
+        source: 'Community Zillow survey',
+      },
+      {
+        key: 'affordability_rank_change',
+        label: 'Affordability Rank Change',
+        description: 'Rank movement between surveys.',
+        show_in_table: true,
+        as_of: '2026-07-28',
+        source: 'Community Zillow survey',
+      },
+    ];
+    render(<MetricNotes metrics={withSource} metricsAsOf="2026-08-02" />);
+    // Legacy line still present for the sourceless zoning metric...
+    expect(screen.getByText('Zoning metric data as of 2026-08-02.')).toBeInTheDocument();
+    // ...plus exactly one deduplicated line for the shared source.
+    expect(
+      screen.getAllByText('Community Zillow survey; data as of 2026-07-28.')
+    ).toHaveLength(1);
+  });
+
+  it('omits the group vintage line when every visible metric has its own source', () => {
+    const allSourced: MetricDisplayConfig[] = [
+      {
+        key: 'affordable_share_pct',
+        label: 'Affordable Listings',
+        description: 'Share of listings affordable at 60% AMI.',
+        show_in_table: true,
+        as_of: '2026-07-28',
+        source: 'Community Zillow survey',
+      },
+    ];
+    render(<MetricNotes metrics={allSourced} metricsAsOf="2026-08-02" />);
+    expect(screen.queryByText(/Zoning metric data/)).not.toBeInTheDocument();
+    expect(
+      screen.getByText('Community Zillow survey; data as of 2026-07-28.')
+    ).toBeInTheDocument();
   });
 });

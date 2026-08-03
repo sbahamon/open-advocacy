@@ -953,3 +953,80 @@ async def test_existing_ward_metrics_carrier_resynced_to_position_zero() -> None
     project_mock.update_project.assert_called_once()
     updated = project_mock.update_project.call_args[0][1]
     assert updated.dashboard_config.position == 0
+
+
+@pytest.mark.asyncio
+async def test_metric_descriptor_edit_resyncs_existing_carrier() -> None:
+    """A changed label/format on an existing metric key must re-sync the config.
+
+    Regression test for the key-set-only drift check, which ignored descriptor
+    edits (label, description, format, show_in_table, as_of/source) so they
+    never propagated to an already-seeded database.
+    """
+    from scripts.import_scorecard_projects import (
+        CHICAGO_WARD_METRICS,
+        ZONING_DELAY_META,
+        import_scorecard_projects,
+    )
+
+    # Same keys, same position, same vintage — only one label differs.
+    stale_metrics = [m.model_copy() for m in CHICAGO_WARD_METRICS]
+    stale_metrics[0].label = "An outdated label"
+    existing = {
+        "test-vote": make_project(
+            id=_PROJECT_VOTE_ID,
+            slug="test-vote",
+            dashboard_config=DashboardConfig(
+                representative_title="Alderperson",
+                status_labels={},
+                position=0,
+                metrics=stale_metrics,
+                metrics_as_of=str(ZONING_DELAY_META.get("computed_at")),
+            ),
+        ),
+    }
+
+    ward_group_config = [
+        {
+            **_TEST_GROUP_CONFIG_ELMS[0],
+            "base_slugs": {"test-vote"},
+            "ward_metrics": True,
+        }
+    ]
+
+    (
+        entity_svc,
+        jurisdiction_svc,
+        project_svc,
+        group_svc,
+        status_svc,
+        _,
+        project_mock,
+    ) = _make_services(project_by_slug=existing)
+
+    ps = _patches(
+        entity_svc,
+        jurisdiction_svc,
+        project_svc,
+        group_svc,
+        status_svc,
+        group_config=ward_group_config,
+        elms_projects=[_VOTE_PROJECT_DEF],
+    )
+    ps.append(
+        patch(
+            "scripts.import_scorecard_projects.build_ward_metric_values",
+            return_value={},
+        )
+    )
+    for p in ps:
+        p.start()
+    try:
+        await import_scorecard_projects()
+    finally:
+        for p in reversed(ps):
+            p.stop()
+
+    project_mock.update_project.assert_called_once()
+    updated = project_mock.update_project.call_args[0][1]
+    assert updated.dashboard_config.metrics == CHICAGO_WARD_METRICS

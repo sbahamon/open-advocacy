@@ -5,16 +5,18 @@ City Council scorecard (`/scorecard/strong-towns-chicago-chicago-city-council` a
 the AHIL Chicago group). It is written for someone with **no prior context** who needs
 to verify the numbers are correct, reproduce them, or extend them.
 
-Three metric groups were planned:
+The metric groups:
 
 | Metric | Status | Source |
 |---|---|---|
 | **Zoning delay** (median days + stalled count) | **Shipped (Phase 1)** | Fully automated from the City Clerk eLMS API |
 | **Bonus units** / **Lost units** | Scaffolded, not yet populated (Phase 2) | Hand/agent-curated registry with mandatory citations |
 | **First mention → passage** days | Scaffolded, hidden (Phase 3) | Curated registry |
+| **Affordability** (affordable-listings share + rank change) | **Shipped** | Community-collected Zillow survey (see §7) |
 
-Only the **delay** metrics are visible in the table today. Bonus/lost-unit columns are
-declared but `show_in_table=False` until the curated registry is populated.
+The **delay** and **affordability** metrics are visible in the table today.
+Bonus/lost-unit columns are declared but `show_in_table=False` until the curated
+registry is populated.
 
 ---
 
@@ -81,6 +83,7 @@ a deliberate, narrow definition.
 |---|---|---|---|---|---|---|---|
 | `zoning_median_days`, `zoning_matter_count`, `zoning_stalled_count` | eLMS `GET /matter` (list) + `/matter/{guid}` (detail) + geocoding | `backend/scripts/fetch_zoning_delay_data.py` | `backend/app/data/ward_zoning_delay_data.py` (`WARD_ZONING_DELAY`, `ZONING_DELAY_META`) | `backend/app/imports/sources/ward_metrics.py::build_ward_metric_values()` | `backend/scripts/import_scorecard_projects.py` → carrier project's `EntityStatusRecord.record_metadata` (+ `dashboard_config.metrics_as_of`) | `ScorecardEntityRow.metrics[key]` + `ScorecardResponse.metrics[]` + `ScorecardResponse.metrics_as_of` | `Scorecard/DesktopTable.tsx` + `MetricCell.tsx` + `MetricNotes.tsx` |
 | `bonus_units`, `lost_units`, `mention_to_passage_days` | Curated news/ordinance research | (manual + Phase-2 agent workflow) | `backend/app/data/alder_units_registry.py` (`ALDER_UNITS_REGISTRY`) | `ward_metrics.py::aggregate_units_registry()` | same seeder path | same | same |
+| `affordable_share_pct`, `affordability_rank_change` | Community Zillow survey CSVs archived in `docs/data/zillow-affordability/` | `backend/scripts/fetch_affordability_data.py` | `backend/app/data/ward_affordability_data.py` (`WARD_AFFORDABILITY`, `AFFORDABILITY_META`) | `ward_metrics.py::build_ward_metric_values()` | same seeder path (descriptors carry per-metric `as_of`/`source`) | same | same |
 
 **Supporting artifacts:**
 - `backend/app/data/chicago-wards.geojson` — the **post-2023 official ward map**
@@ -291,3 +294,60 @@ A second **adversarial verification** agent re-fetches each citation and confirm
 and attribution before the entry is merged. `ALDER_ZONING_CANDIDATES` seeds the search (subject
 to the name-gap caveat in §5). After merge, flip `bonus_units`/`lost_units` to
 `show_in_table=True` in `CHICAGO_WARD_METRICS` and re-run the seeder.
+
+---
+
+## 7. Community-collected Zillow affordability metrics
+
+Two visible columns come from a **community-collected survey**, not an API:
+**Affordable Listings (% at 60% AMI)** (`affordable_share_pct`) and
+**Affordability Rank Change (2025→2026)** (`affordability_rank_change`).
+
+**Provenance.** Collin Pearsall (Ward 1) hand-drew each of the 50 wards as a custom
+search region in the Zillow web UI and recorded rental and for-sale listing data for
+every ward — once in late July 2025 (7/25–27) and again in late July 2026 (7/25–28),
+reusing the identical saved boundaries. The raw sheets, his original methodology
+note, and an archive README live in `docs/data/zillow-affordability/`.
+
+**Definitions.**
+
+- **`affordable_share_pct`** (0–100). Of the ward's rental *and* for-sale listings
+  with 0–5 bedrooms in the July 2026 survey, the share priced within the **ARO 60%
+  AMI limit for their bedroom count** ([2026 limits](https://www.chicago.gov/content/dam/city/sites/affordable-requirements-ordinance/2026%20Income%20and%20Rent%20Limits%20-%20final.pdf);
+  the 2025 survey used the [2025 limits](https://www.chicago.gov/content/dam/city/sites/affordable-requirements-ordinance/2025%20Income%20and%20Rent%20Limits.pdf)).
+  Rentals compare monthly rent; for-sale listings compare **Zillow's estimated
+  monthly payment with no money down and any credit score**, which folds in
+  HOA/taxes and avoids price-only inconsistencies.
+- **`affordability_rank_change`** (integer). How many places the ward moved in the
+  50-ward ranking by affordable-listings share between the two surveys. **Positive =
+  relatively more affordable.** Because it is a rank, citywide price shifts cancel
+  out; only movement *relative to other wards* registers.
+
+**Pipeline.** `python -m scripts.fetch_affordability_data` parses the archived CSVs
+into `backend/app/data/ward_affordability_data.py`. The parser matches columns by
+normalized header prefix, recomputes each share from the raw affordable/total counts
+and fails if it disagrees with the sheet by more than 0.1 pp, requires all 50 wards
+exactly once, and cross-checks the comparison sheet's rank change against the two
+years' rank columns — column drift aborts the import rather than shipping a wrong
+number. The metric descriptors carry their own `as_of` (2026-07-28) and `source`
+attribution, rendered as a separate footnote line; the zoning metrics keep the
+group-level `metrics_as_of`.
+
+**Known limitations & judgment calls.**
+
+- **Hand-drawn boundaries** closely approximate, but are not identical to, the
+  official post-2023 ward map used by the zoning metrics.
+- The ARO limits used assume **landlords pay utilities**; wards where tenants pay
+  utilities (most areas outside downtown) look somewhat more affordable than they are.
+- **Small samples.** Ward listing totals ranged from ~74 to ~1,512 in 2026; low-count
+  wards' shares (and hence rank changes) are noisy. Citywide context:
+  16.2% affordable (2025, n=19,462) → 16.8% (2026, n=21,312), in
+  `AFFORDABILITY_META`.
+- **One-week July snapshots**, not annual averages; medians were read manually from
+  Zillow's price filters.
+- Land/empty lots and room-only rentals were excluded; multifamily buildings were not.
+
+**Auditor steps.** (1) Open the archived CSVs and spot-check a ward's combined
+affordable/total counts against the generated module. (2) Re-run the fetch script —
+only the `# Generated:` timestamp should change. (3) Confirm the scorecard column
+for a ward equals the module's `affordable_share_pct`, e.g. Ward 4 = 19.68 → "19.7%".

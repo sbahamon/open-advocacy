@@ -30,4 +30,10 @@ describe('formatMetricValue', () => {
     expect(formatMetricValue(1234, 'not-a-real-format')).toBe((1234).toLocaleString());
     expect(formatMetricValue(1234, 'number')).toBe((1234).toLocaleString());
   });
+
+  it('formats percentages from a 0-100 value with one decimal', () => {
+    expect(formatMetricValue(19.68, 'percentage')).toBe('19.7%');
+    expect(formatMetricValue(0, 'percentage')).toBe('0.0%');
+    expect(formatMetricValue('1.16', 'percentage')).toBe('1.2%');
+  });
 });
