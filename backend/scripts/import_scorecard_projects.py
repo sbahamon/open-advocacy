@@ -194,6 +194,14 @@ async def import_scorecard_projects() -> None:
             is_metrics_carrier = (
                 carrier_base_slug is not None and base_slug == carrier_base_slug
             )
+            # The carrier must sort first: the scorecard service takes the
+            # metrics config from the first project in position order that
+            # declares any, and with no position it falls back to DB insertion
+            # order — where another metric-bearing project (the ADU dashboard,
+            # seeded before scorecard projects on cold start) shadows the
+            # ward-metric descriptors.
+            if is_metrics_carrier and position is None:
+                position = 0
             project_metrics: list[MetricDisplayConfig] | None = (
                 CHICAGO_WARD_METRICS if is_metrics_carrier else None
             )

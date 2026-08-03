@@ -840,3 +840,116 @@ async def test_ward_metrics_carrier_gets_vintage_and_ward_scoped_metadata() -> N
         "zoning_median_days": 42.0,
         "zoning_stalled_count": 1,
     }
+
+
+@pytest.mark.asyncio
+async def test_ward_metrics_carrier_created_with_position_zero() -> None:
+    """A position-less carrier def gets position 0, so the scorecard service's
+    first-project-in-position-order carrier selection cannot be shadowed by a
+    metric-bearing project (e.g. the ADU dashboard) inserted earlier."""
+    from scripts.import_scorecard_projects import import_scorecard_projects
+
+    (
+        entity_svc,
+        jurisdiction_svc,
+        project_svc,
+        group_svc,
+        status_svc,
+        _,
+        project_mock,
+    ) = _make_services()
+
+    ward_group_config = [{**_TEST_GROUP_CONFIG_ELMS[0], "ward_metrics": True}]
+    ps = _patches(
+        entity_svc,
+        jurisdiction_svc,
+        project_svc,
+        group_svc,
+        status_svc,
+        group_config=ward_group_config,
+        elms_projects=_TEST_ELMS_PROJECTS,
+    )
+    ps.append(
+        patch(
+            "scripts.import_scorecard_projects.build_ward_metric_values",
+            return_value={},
+        )
+    )
+    for p in ps:
+        p.start()
+    try:
+        await import_scorecard_projects()
+    finally:
+        for p in reversed(ps):
+            p.stop()
+
+    configs_by_slug = {
+        c.args[0].slug: c.args[0].dashboard_config
+        for c in project_mock.create_project.call_args_list
+    }
+    assert configs_by_slug["test-vote"].position == 0  # carrier (first project)
+    assert configs_by_slug["test-sponsorship"].position is None  # non-carrier
+
+
+@pytest.mark.asyncio
+async def test_existing_ward_metrics_carrier_resynced_to_position_zero() -> None:
+    """An already-seeded carrier with position None is updated to position 0 on
+    re-seed, healing databases seeded before the carrier position existed."""
+    from scripts.import_scorecard_projects import import_scorecard_projects
+
+    existing = {
+        "test-vote": make_project(
+            id=_PROJECT_VOTE_ID,
+            slug="test-vote",
+            dashboard_config=DashboardConfig(
+                representative_title="Alderperson",
+                status_labels={},
+                position=None,
+            ),
+        ),
+    }
+
+    ward_group_config = [
+        {
+            **_TEST_GROUP_CONFIG_ELMS[0],
+            "base_slugs": {"test-vote"},
+            "ward_metrics": True,
+        }
+    ]
+
+    (
+        entity_svc,
+        jurisdiction_svc,
+        project_svc,
+        group_svc,
+        status_svc,
+        _,
+        project_mock,
+    ) = _make_services(project_by_slug=existing)
+
+    ps = _patches(
+        entity_svc,
+        jurisdiction_svc,
+        project_svc,
+        group_svc,
+        status_svc,
+        group_config=ward_group_config,
+        elms_projects=[_VOTE_PROJECT_DEF],
+    )
+    ps.append(
+        patch(
+            "scripts.import_scorecard_projects.build_ward_metric_values",
+            return_value={},
+        )
+    )
+    for p in ps:
+        p.start()
+    try:
+        await import_scorecard_projects()
+    finally:
+        for p in reversed(ps):
+            p.stop()
+
+    project_mock.update_project.assert_called_once()
+    updated = project_mock.update_project.call_args[0][1]
+    assert updated.dashboard_config.position == 0
