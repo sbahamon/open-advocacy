@@ -1,0 +1,352 @@
+{
+  "entries": [
+    {
+      "ward": 21,
+      "alder": "Ronnie Mosley",
+      "elected": "2023-05-15",
+      "elected_citation": "https://www.aldmosley21.com/ald-mosley",
+      "items": [
+        {
+          "name": "Morgan Park Missing Middle mass rezoning (RS-3 -> RT-4, A-8970) — Superior Source site, 1320-38 W 109th Pl & 1425-29 W 109th (18 units)",
+          "kind": "upzone",
+          "units_delta": 18,
+          "date": "2025-05-21",
+          "first_public_date": "2025-04-16",
+          "elms_record_number": "O2025-0016179",
+          "citations": [
+            "https://www.chicago.gov/city/en/depts/mayor/press_room/press_releases/2026/january/missing-middle-round-two.html",
+            "https://blockclubchicago.org/2026/01/22/developers-to-construct-missing-middle-housing-in-morgan-park/",
+            "https://www.chicago.gov/city/en/depts/dcd/provdrs/ec_dev/news/2025/november/land-sale--incentives-proposed-for-morgan-park--missing-middle--.html",
+            "https://chicago.councilmatic.org/legislation/o2025-0016179/"
+          ],
+          "attribution_rationale": "Same enabling change as the Famor item: Mosley's aldermanic application A-8970 (O2025-0016179, sole primary sponsor, passed 2025-05-21) rezoned these Morgan Park blocks RS-3 -> RT-4 to facilitate Missing Middle construction. Superior Source Capital LLC's six three-flats ('six three-flat buildings housing 18 new units in Morgan Park' per mayor's Jan 21, 2026 release; 'six three-flats housing 18 new units' per Block Club) are on 1320-38 W 109th Pl and 1425-29 W 109th, inside the rezoned area; the three-flats require the RT-4 zoning Mosley introduced. The land-sale ordinance itself (O2025-0021689) was mayoral, so units are attributed to the alder-initiated rezoning.",
+          "notes": "1320-38 W 109th Pl is explicitly within A-8970's listed range (1233-1435 W 109th Pl). The second address is given as '1425-29 W. 109th St.' in the mayoral release (A-8970 lists 1201-1421 W 109th St, so 1425-29 would be just past the listed range) but as '1425-29 W. 109th Place' in Block Club, which is within the listed range.",
+          "_verify": {
+            "verdict": "confirmed",
+            "reason": "All four citations load. The 18-unit count is stated verbatim in the mayor's Jan 21 2026 release ('six three-flat buildings housing 18 new units in Morgan Park') and Block Club ('six three-flats housing 18 new units'). Kind=upzone is correct: RS-3 permits only detached houses; RT-4 (Residential Two-Flat, Townhouse and Multi-Unit) is what makes the three-flats legal. Attribution verified via eLMS API (matter E6E938F6-060C-F011-BAE3-001DD805116A): O2025-0016179 / App A-8970 has exactly one sponsor, Mosley, Ronnie L., filing office Ward 21, and the ordinance text bears his signature — he introduced it. Dates verified against eLMS: introduced 2025-04-16 (= first_public_date), passed 2025-05-21 (= date), both >= 2023-05-15; record number matches the required format. The St-vs-Pl ambiguity flagged in the item's notes is resolved in the item's favor: land-sale ordinance O2025-0021689 lists the six lots as 1429, 1427, 1425, 1338, 1322 and 1320 W 109th PLACE (the mayor's release's '1425-29 W. 109th St.' was its error; Block Club had it right), and an independent spot-check of the City zoning dataset shows every checked lot (1320, 1338, 1425, 1429 W 109th Pl) sits in an RT-4 polygon whose ordinance field is A8970 dated 2025-05-21 — all six lots were rezoned by Mosley's ordinance. 6 three-flats x 3 units = 18, consistent."
+          }
+        },
+        {
+          "name": "Morgan Park Missing Middle mass rezoning (RS-3 -> RT-4, A-8970) — Vazquez site, 1111-1240 W 110th Pl (15 units)",
+          "kind": "upzone",
+          "units_delta": 15,
+          "date": "2025-05-21",
+          "first_public_date": "2025-04-16",
+          "elms_record_number": "O2025-0016179",
+          "citations": [
+            "https://www.chicago.gov/city/en/depts/mayor/press_room/press_releases/2026/january/missing-middle-round-two.html",
+            "https://blockclubchicago.org/2026/01/22/developers-to-construct-missing-middle-housing-in-morgan-park/",
+            "https://www.chicago.gov/city/en/depts/dcd/provdrs/ec_dev/news/2025/may/new-zoning-will-facilitate--missing-middle--residential-projects.html",
+            "https://chicago.councilmatic.org/legislation/o2025-0016179/"
+          ],
+          "attribution_rationale": "Mosley is the sole sponsor of aldermanic zoning application A-8970 (O2025-0016179; filing office Ward 21; ordinance text signed 'Ronnie L. Mosley, Alderman, 21st Ward'; introduced 2025-04-16, passed 2025-05-21 per the City Clerk eLMS API), which rezoned these Morgan Park blocks RS-3 -> RT-4 to facilitate Missing Middle construction — RS-3 permits only detached houses, so the RT-4 he introduced is what makes Vazquez Housing Development's five three-flats ('15 units are set for development' per the mayor's Jan 21, 2026 release; 'five three-flats with 15 units in all' per Block Club) legal. All five lots per land-sale ordinance O2025-0021688 (1235, 1240, 1222, 1200, 1111 W 110th Pl) are confirmed inside the A-8970 rezoning: the City of Chicago zoning dataset (dj47-wfun) shows each lot in an RT-4 polygon with ordinance A8970 dated 2025-05-21. The land-sale ordinance itself was a mayoral introduction, so units are attributed to the alder-initiated enabling rezoning.",
+          "notes": "Address correction vs. the press-release wording: the mayor's release and Block Club describe the site as '1158-1240 W. 110th Place and 1235 W. 110th St.', but land-sale ordinance O2025-0021688's title lists the actual lots as 1235, 1240, 1222, 1200, and 1111 W 110th Pl (no 1158 lot; 1235 is on 110th Pl, not 110th St). All five fall within A-8970's listed common-address ranges (1101-1437 and 1200-1436 W 110th Pl) and were spot-verified as rezoned by A8970 on 2025-05-21 in the City zoning dataset. Developer history: site originally assigned to Toro Construction Corp. in the Aug 2025 selection; approved developer in Jan 2026 is Vazquez Housing Development; both iterations stated 15 units.",
+          "_verify": {
+            "verdict": "corrected",
+            "reason": "Substantively sound but the site addresses (taken from the mayor's press release) are wrong. All citations load; 15 units is stated verbatim in the mayor's release ('15 units are set for development') and Block Club ('five three-flats with 15 units in all'). Mosley attribution, dates, and eLMS number verified as for item 1. However, land-sale ordinance O2025-0021688's title lists the five lots as 1235, 1240, 1222, 1200, and 1111 W 110th Pl — there is no 1158 lot, 1111 W 110th Pl is omitted from the item name, and '1235 W 110th St' is actually 1235 W 110th Pl. The rationale's claim that the range fits inside A-8970 survives anyway: City zoning dataset spot-checks show all five actual lots (1111, 1200, 1222, 1240, 1235 W 110th Pl) in RT-4 polygons with ordinance field A8970 dated 2025-05-21, i.e. every Vazquez lot was rezoned by Mosley's ordinance (1111 falls in the listed 1101-1437 W 110th Pl range). Corrected item fixes the name and notes to the ordinance's addresses; kind, units_delta, dates, eLMS number and citations unchanged."
+          }
+        }
+      ]
+    }
+  ],
+  "rejected": [
+    {
+      "alder": "Ronnie Mosley",
+      "item": "Morgan Park Missing Middle mass rezoning (RS-3 -> RT-4, A-8970) — Famor site, W 109th Pl / 110th / 111th St (24 units)",
+      "reason": "All four citations load and the 24-unit count is stated verbatim in the mayor's Jan 21 2026 release ('introduce 24 units to Morgan Park') and Block Club ('six four-flat buildings with 24 units in all'). Mosley attribution for A-8970 itself is solid (eLMS O2025-0016179: sole sponsor Mosley, filing office Ward 21, passed 2025-05-21). But the item fails the enablement check: the Famor land-sale ordinance O2025-0020977 identifies the six lots as 1409, 1335, 1333 W 109th Pl, 1435 W 110th Pl, and 1454, 1456 W 111th St. The legal text of A-8970 (attachment 'Morgan Park - Middle Missing - 21st Ward.pdf') bounds the rezoning at W 110th Pl / the alley next south of W 110th Pl — it never reaches W 111th St, and no W 111th St address appears in its common-address list. The City's zoning dataset (dj47-wfun) confirms the 111th St lots sit in an RT-4 polygon created by ordinance A4984 dated 2002-11-06, i.e. they were already RT-4 two decades before Mosley took office, while the other four lots show ordinance A8970 dated 2025-05-21. A Councilmatic search of all Mosley zoning ordinances touching W 111th St (A-9033, A-9038, O2025-0018192, etc.) found none covering 1454-1456 W 111th St. So Mosley's upzone enabled at most 4 of the 6 four-flats = 16 units, not 24. No citation states 16 (or any before/after pair yielding it), so under the registry rule that units_delta must appear verbatim in a citation, the item cannot be corrected — only re-added later at 16 units if a source directly stating a per-site split is found."
+    },
+    {
+      "alder": "Ronnie Mosley",
+      "item": "10726-10750 S Loomis St rezoning for Missing Middle 'Cluster G' (A-9041) — Far South CDC three-flats (12 units)",
+      "reason": "The eLMS record itself verifies cleanly: the City Clerk eLMS API confirms O2025-0018787 ('Zoning Reclassification Map No. 26-G at 10726-10750 S Loomis St - App No. A-9041'), filing sponsor Mosley, Ronnie L. (Ward 21), introduced 2025-07-16, passed 2025-09-25, and the ordinance PDF attachment is signed by Mosley and rezones M1-1/RS-3 to RT-4 (a real Mosley-initiated upzone). The DPD release states '12 planned units' and Urbanize states 12 total units (three condos per building) across 10726/10730/10734 S Loomis and 10717 S Glenroy. However, units_delta=12 is wrong for THIS ordinance: Chicago's current zoning dataset (data.cityofchicago.org dj47-wfun) shows the Loomis parcels are RT-4 via ordinance A-9041 (edit 2025-10-14), while the 10717 S Glenroy parcel is RT-4 under a separate case (23993) on a polygon created in the 2009 baseline remap — the fourth building's lot was never part of A-9041 and did not need it, so A-9041 enabled at most 3 of the 4 three-flats = 9 units. No citation states a 9-unit figure (9 only follows by multiplying 'three condos per building' by the subset of lots inside the rezoning, which fails the verbatim-count rule for upzones), so no compliant corrected_item exists: 12 is misattributed and 9 is uncitable. Additional defect: the councilmatic citation URL serves a different ordinance entirely (O2025-0016179, App No. A-8970, W 108th-110th streets, passed 2025-05-21) and does not document O2025-0018787. Block Club could not be fetched (HTTP 429) and chicago.gov returns 403 to automated fetch (content confirmed via browser-UA fetch). The item could be resubmitted at 9 units only if a source directly stating a 9-unit (three-building) count for the rezoned Loomis lots is found."
+    },
+    {
+      "alder": "Anthony Beale",
+      "reason": "no items survived verification"
+    },
+    {
+      "alder": "Nicole Lee",
+      "reason": "no items survived verification"
+    },
+    {
+      "alder": "Jason Ervin",
+      "item": "Garfield Green / Fifth City Commons upzone (C1-3 -> Planned Development, 201 S Kedzie Ave at Fifth Ave)",
+      "reason": "Citations and mechanics check out: Chicago YIMBY (chicagoyimby.com/2022/01/zoning-approved-for-garfield-green-development-in-east-garfield-park.html) states the Council-approved rezoning from C1-3 to Planned Development allows 'up to 81 affordable residential units' (matches units_delta=81); the eLMS record confirms SO2021-1502 introduced 2021-04-21 and passed City Council 2021-12-15 (matches date and first_public_date); a Sun-Times spot-check also reports 81 units. However, attribution fails the initiation test. The eLMS record lists the sponsor as 'Misc. Transmittal' (applicant/DPD-filed), not Ervin. GPCC coverage says only that Ervin 'supported the project from the beginning' and praised POAH's community engagement; POAH's opening announcement contains a supportive quote. No source states Ervin introduced the ordinance, demanded the rezoning, or forced any change — this was a POAH-initiated development selected through the C40 Reinventing Cities program on city land. Support/championing of a developer-initiated, city-program project is explicitly insufficient under the initiation criterion, and the researcher's own rationale concedes the ordinance was 'applicant-filed by developer POAH via DPD transmittal, not introduced by Ervin.' Attribution is not a fixable field, so no correction is possible."
+    },
+    {
+      "alder": "Jason Ervin",
+      "item": "Hub32 upzone + city land sale (C1-5 -> B3-3, 132-136 N Kedzie Ave at Lake St)",
+      "reason": "Citations and mechanics check out: Urbanize (chicago.urbanize.city/post/city-council-approves-revised-hub32-development) states the Council-approved rezoning C1-5 to B3-3 for a five-story, 51-unit all-affordable building scaled back from 63 units (matches units_delta=51); Chicago YIMBY corroborates 51 units; the eLMS record confirms O2025-0020567 (App No. 22908T1) passed City Council 2025-11-14 (matches date); Block Club spot-check also reports 51 units; first_public_date 2023-03-29 precedes date. However, attribution fails the initiation test. The eLMS sponsor is 'Misc. Transmittal' (applicant-filed), and the Council passage was moved by Alderperson Lawson, not Ervin. Hub 32 was selected by Mayor Lightfoot's administration through the Invest South/West East Garfield Park RFQ — a mayoral/city-wide program — and Ervin's only documented role is a supportive quote ('Hub 32 will improve a transit-oriented site...'). Neither Urbanize nor YIMBY coverage of the Council approval mentions Ervin at all. No source states he introduced the ordinance, demanded the rezoning, or forced the 63-to-51 reduction (the item's own notes attribute the reduction to costs). Support for a mayoral-program, developer-initiated project is explicitly insufficient under the initiation criterion; the researcher's rationale concedes the ordinance was 'applicant-filed via DPD transmittal, not introduced by Ervin.' Attribution is not a fixable field, so no correction is possible."
+    },
+    {
+      "alder": "Jason Ervin",
+      "reason": "no items survived verification"
+    },
+    {
+      "alder": "Gregory Mitchell",
+      "reason": "no items survived verification"
+    }
+  ],
+  "omitted": [
+    {
+      "alder": "Ronnie Mosley",
+      "what": "Morgan Park Missing Middle mass rezoning A-8970 as a single aggregate item (57 units: 24 Famor + 18 Superior Source + 15 Vazquez)",
+      "reason": "No citation states the 57-unit Morgan Park aggregate verbatim; the mayor's Jan 21, 2026 release and Block Club state 24, 18 and 15 per project. Represented as three site-level items with verbatim counts instead of one summed item, to comply with the no-arithmetic/no-estimates rule."
+    },
+    {
+      "alder": "Ronnie Mosley",
+      "what": "95th Street Corridor Plan proactive rezonings introduced by Mosley (O2025-0019835 and O2025-0019838 passed 2025-11-14; SO2025-0020885 and O2025-0021693 passed 2026-02-18; O2025-0021692 and O2025-0021895 passed 2026-05-20) — 300+ parcels rezoned along 95th St/Halsted/Ashland/Vincennes with Alds. Hall (6th) and Harris (8th)",
+      "reason": "Clearly Mosley-initiated (aldermanic A-applications implementing the 95th Street Corridor Plan, per DPD and Chicago Cityscape coverage of the '28 blocks along 95th Street' upzoning), but no fetched citation states a housing-unit count for the rezonings — coverage counts parcels (300+), not units. Also mixed direction: e.g., O2025-0021693 rezoned 9414-9434 S Halsted from B2-3 to RT4, which reduces density on that segment; no units-foreclosed figure exists either."
+    },
+    {
+      "alder": "Ronnie Mosley",
+      "what": "September 25, 2025 batch of 14 other Mosley-sponsored Ward 21 proactive rezonings (A-9032 through A-9046, e.g. 9514-9632 S Vincennes, 8576-8626 S Vincennes, 10501-10659 S Throop, 12018-12259 S Halsted, 749-755 W 118th/119th St corridors)",
+      "reason": "Mosley-initiated upzones/reclassifications, but no news or city citation stating unit counts was found; only A-9041 (10726-10750 S Loomis) could be tied to a citable unit count via the Far South CDC Missing Middle project."
+    },
+    {
+      "alder": "Ronnie Mosley",
+      "what": "Morgan Park Commons planned development, 11400-11458 S Halsted St (rezoning approved by City Council 2025-12-10; phase 1 = 70 apartments, 66 affordable; full project up to 258 apartments)",
+      "reason": "Ambiguous attribution: the rezoning/PD was initiated by developer Far South Community Development Corporation (half the site city-owned), not by Mosley — it is not among his eLMS-sponsored matters. Mosley vocally championed the project ('finally bringing forth a catalytic project', Block Club 2025-12-10) but did not initiate it, so it fails the initiator rule."
+    },
+    {
+      "alder": "Ronnie Mosley",
+      "what": "Red Line Extension rezonings (O2024-0013074, O2024-0013086, O2024-0013087, SO2024-0013088; Mosley primary sponsor with Alds. Beale and Chico; passed 2024-12-11) covering scattered parcels in Roseland/West Pullman/Riverdale",
+      "reason": "Not housing production: these rezonings were filed on behalf of the CTA to permit Red Line Extension construction (Block Club, 2024-12-11); 67 parcels with buildings will be demolished for the transit project. No housing units enabled or foreclosed is stated, and the initiative is CTA's, not a housing action by the alder."
+    },
+    {
+      "alder": "Ronnie Mosley",
+      "what": "Pending 2026 Mosley rezonings still in committee (O2026-0026306, O2026-0026308, O2026-0026310, O2026-0026313 around W 108th-112th St/Normal/Eggleston/Stewart; O2026-0024062 at 11957 S Halsted; O2025-0018192 at 111th St/Racine/Aberdeen) and small completed ones (O2026-0024907 at 433-437 W 119th St; O2025-0016703 Edmaire St; O2025-0016702 at 1143 W 95th St)",
+      "reason": "Either not yet passed by City Council (no effective date) or no citation stating unit counts was found."
+    },
+    {
+      "alder": "Ronnie Mosley",
+      "what": "Downzones or shrunk developments initiated by Mosley",
+      "reason": "Searched Block Club, Urbanize Chicago, Chicago YIMBY, Crain's and general news for Mosley blocking, downzoning or shrinking developments since May 2023; found no reported instance. The only capacity-reducing candidate (B2-3 -> RT4 on 9414-9434 S Halsted, part of the 95th St Corridor implementation) has no stated units-foreclosed figure and is a corridor-plan reclassification rather than an anti-housing action."
+    },
+    {
+      "alder": "Anthony Beale",
+      "what": "Systematic Beale-initiated downzoning campaign to RS-2 single-family (verified by reading ordinance PDFs from eLMS attachments): O2023-0005332 (319 E 103rd St -> RS-2, passed 2023-12-13), O2024-0010624 (34-40 W 95th St, B3-1 -> RS2, passed 2024-09-18), O2025-0018684 (107 E 95th St, B3-1 -> RS-2, passed 2025-09-25), O2025-0019310 (4-8 W 103rd St, B1-1 -> RS-2, passed 2025-10-16), O2025-0019313 (10957 S Wentworth Ave, B3-1 -> RS-2, passed 2025-10-16), O2026-0023546 (224 E 103rd St, B3-1 -> RS2, passed 2026-05-20), O2026-0023549 (11155 S Michigan Ave, M1-1 -> RS2, passed 2026-05-20), O2026-0025038 (11139 S Michigan Ave, B1-3 -> RS-2, passed 2026-07-15), O2026-0025201 (10701 S Dr. Martin Luther King Jr. Dr, B3-2 -> RS-2, passed 2026-07-15). All are Type-A applications signed 'Anthony Beale, Alderman, 9th Ward' (clear alder initiation).",
+      "reason": "No citable unit count. These downzones eliminate multi-unit/mixed-use capacity (e.g., B1-3 allowed apartments above ground floor at 11139 S Michigan), but no news article, ordinance, or plan commission document states a number of units foreclosed, and the registry forbids estimates. No press coverage of the campaign was found at all (searched Block Club, Sun-Times, Tribune/Chicago Magazine 'Game of Zones', Bisnow, Chicago YIMBY, Urbanize)."
+    },
+    {
+      "alder": "Anthony Beale",
+      "what": "April 2024 Roseland corridor rezoning batch (11 Beale-signed ordinances along S Michigan Ave/E Kensington Ave, 117th-119th, introduced 2024-04-17, passed 2024-06-12): O2024-0008701 through O2024-0008712. Verified from PDFs: O2024-0008704 = B3-1 -> RT-4 at 355-357 E Kensington (residential-enabling upzone); O2024-0008709 = B3-2 -> B2-1 at 11801-11810 S Michigan; O2024-0008701 = B3-1 -> B2-1 at 25-27 E 119th St (B2 allows ground-floor residential).",
+      "reason": "Mixed direction (some residential-enabling, some density-reducing B3-2 -> B2-1) with no published unit counts for any parcel. These sit in the same six-block footprint as the United Power 'Reclaiming Chicago' home-building effort, but no citation links Beale's rezonings to those homes, which are on side streets (E 118th St, 11801 S Indiana Ave)."
+    },
+    {
+      "alder": "Anthony Beale",
+      "what": "Reclaiming Chicago / United Power Roseland homes: 11 homes completed late 2024 and 10 more ribbon-cut May 2026 on E 118th St (first home at 11801 S Indiana Ave, Nov 2023); ~91 planned in Roseland (Sun-Times 2026-05-01, https://chicago.suntimes.com/real-estate/2026/05/01/reclaiming-chicago-initiative-10-homes-roseland; Sun-Times 2025-08-01; metro-iaf.org).",
+      "reason": "Ambiguous attribution: initiated by the United Power for Action and Justice coalition, Hope Center Foundation, Chicago Neighborhood Initiatives and the Cook County Land Bank, not by Beale. None of the fetched articles mention Beale or any Beale-initiated ordinance enabling the homes."
+    },
+    {
+      "alder": "Anthony Beale",
+      "what": "1Fifteen at Michigan Station: $48.3M, 58 affordable apartments + 23,000 sq ft retail at 115th & Michigan next to the future Red Line station (chicago.gov June 2025 press release; Chicago YIMBY June 2025; Sun-Times 2025-06-12).",
+      "reason": "Not alder-initiated: the site was offered through a DPD Request for Qualifications (issued Dec 2022 under INVEST South/West) and the winner was selected and announced by Mayor Johnson/DPD. Beale's related ordinance O2024-0013073 (PD 1185 -> B3-1 at 11500-11568 S Michigan, passed 2024-12-11) is station-area cleanup, not the entitlement that enables the 58 units."
+    },
+    {
+      "alder": "Anthony Beale",
+      "what": "Red Line Extension station-area rezonings (Oct-Dec 2024): Beale filed O2024-0013073 (11500-11568 S Michigan, Commercial PD 1185 -> B3-1); companion multi-address rezonings to Transportation 'T' districts (O2024-0013086, O2024-0013074, O2024-0013087, SO2024-0013088) were filed by Ald. Mosley (21st). Block Club, 2024-12-11: zoning committee approved applications from Alds. Beale, Chico, Mosley to rezone dozens of properties along the RLE route (https://blockclubchicago.org/2024/12/11/red-line-extension-zoning-changes-approved-by-city-council/).",
+      "reason": "Substantively CTA-initiated (rezonings requested to conform land for the transit project; 67 parcels had buildings slated for demolition per Block Club), filed by alders as a formality of aldermanic prerogative. No citation states a count of housing units removed or foreclosed, and attribution to Beale as initiator would be misleading."
+    },
+    {
+      "alder": "Anthony Beale",
+      "what": "517 W 119th St, West Pullman: 36-unit affordable development, B1-1 -> B2-3, approved by City Council 2021-11-22 (https://chicagoyimby.com/2021/11/chicago-city-council-approved-affordable-residential-development-at-517-w-119th-street-in-west-pullman.html).",
+      "reason": "Attribution unverifiable: the article does not name the alderman or who introduced the rezoning; under the pre-2023 ward map this address was likely in Ward 34 (Carrie Austin), not Beale's Ward 9. Developer-driven application in any case."
+    },
+    {
+      "alder": "Anthony Beale",
+      "what": "Pullman Artspace Lofts: 38 affordable artist live/work units at ~111th/Langley, completed 2019; Beale publicly supported it (ward09.com, Preservation Chicago coverage).",
+      "reason": "Developer/nonprofit-initiated (Artspace Projects, Chicago Neighborhood Initiatives, PullmanArts); Beale supported but no evidence he initiated the zoning entitlement, so it fails the initiator-attribution rule."
+    },
+    {
+      "alder": "Anthony Beale",
+      "what": "Citywide ADU expansion restrictions (July 2025): Beale called the by-right ADU ordinance a 'disaster' and fought to preserve aldermanic control; the measure advanced 'with restrictions' (https://blockclubchicago.org/2025/07/15/measure-to-allow-new-coach-houses-basement-units-citywide-advances-with-restrictions/).",
+      "reason": "Citywide legislation, not a ward-level change; the restrictions were a compromise among many alders, not attributable to Beale alone; and no citation quantifies units foreclosed by his opposition or by Ward 9 not opting in."
+    },
+    {
+      "alder": "Anthony Beale",
+      "what": "Five pending/unpassed Beale rezonings with no final action (O2025-0018685 at 501-517 E 103rd St, O2025-0019309 at 500-508 W 103rd St, O2025-0021723 at 537 E 111th St) and remaining Sept 2025/May 2026 batch members not individually read (O2025-0019311, O2025-0019312, O2026-0025199, O2026-0025200, O2026-0025039).",
+      "reason": "Either not yet in effect (no Council passage date) or from/to districts not individually verified; in all cases no citable unit count exists, consistent with the verified members of the same batches (downzones to RS-2)."
+    },
+    {
+      "alder": "Nicole Lee",
+      "what": "35th Street corridor upzone, W 35th St between Archer/Ashland-Seeley (1612-2020 W 35th St, 1615-1965 W 35th St, 3500-3516 S Ashland Ave), R3 residential to B2-3/B3-2 business — O2024-0013956 (App No. A-8930), Lee-filed jointly with Ald. Julia Ramirez (Ward 12), introduced 2024-12-02 (community meetings from Aug 2023), passed City Council 2025-02-19",
+      "reason": "Clearly Lee-initiated upzone (eLMS filingSponsor = Lee, Nicole T.; McKinley Park News and Block Club confirm she and Ramirez initiated it), but no citation states a number of housing units enabled — coverage (mckinleypark.news/news/5753, /news/5878, blockclubchicago.org 2023-08-03) only says B2-3 allows 'up to three residential units above streetside businesses' per property, with no total. No estimates allowed."
+    },
+    {
+      "alder": "Nicole Lee",
+      "what": "M1-1 (manufacturing) to RT4 (Residential Two-Flat/Townhouse/Multi-Unit) rezone at 2972 S Poplar Ave, 922-958 W 29th St, 2871-2882 S Quinn St, 2935 S Throop St in Bridgeport — O2024-0011968, Lee-filed (ordinance signed by Lee, confirmed in eLMS PDF), introduced 2024-09-18, passed 2024-12-11",
+      "reason": "Lee-initiated upzone converting manufacturing land to residential, but zero news coverage found (Block Club, YIMBY, Urbanize, McKinley Park News) and no citable unit count for capacity enabled."
+    },
+    {
+      "alder": "Nicole Lee",
+      "what": "Downzone at 442-448 W Root St, Canaryville, from C1-5 (dense commercial allowing upper-floor apartments) to RS3 single-family — O2025-0014816 (App No. A-8937), Lee-filed, introduced 2025-01-15, passed 2025-03-12",
+      "reason": "Lee-initiated downzone that reduces housing capacity, but no citation states a number of units foreclosed and no news coverage of a blocked project was found; registry rules forbid estimating the delta."
+    },
+    {
+      "alder": "Nicole Lee",
+      "what": "Halsted corridor upzones at 3509-3515 and 3519-3559 S Halsted St (Ramova Theatre block area) from RS3/B1-3 to B3-2 — O2023-0003537 (A-8848) and O2023-0003542 (A-8849), Lee-filed, passed 2023-10-16; plus a withdrawn/unfinalized predecessor O2023-0002756",
+      "reason": "Lee-initiated corridor upzones (ordinances signed by Lee), but no citation states housing units enabled; coverage of the corridor focuses on the Ramova Theatre entertainment project, not housing counts."
+    },
+    {
+      "alder": "Nicole Lee",
+      "what": "Upzone at 937-1021 W 31st St (31st/Morgan, Bridgeport) from RS1/B1-2/B2-2 to uniform B2-2 Neighborhood Mixed-Use — O2023-0005951 (A-8864), Lee-filed substitute ordinance, introduced 2023-11-15, passed 2024-02-21",
+      "reason": "Lee-initiated mixed-use upzone enabling residential over storefronts, but no news coverage or citable unit count found."
+    },
+    {
+      "alder": "Nicole Lee",
+      "what": "Map amendment at 515-541 W 40th Pl, 518-542 W 41st St and 4039-4041 S Wallace St, Canaryville — O2024-0008982 (App No. A-8886), Lee-filed, passed 2024-06-12",
+      "reason": "Lee-initiated, but no news coverage found, from/to districts not independently verified against a public story, and no citable unit count in either direction."
+    },
+    {
+      "alder": "Nicole Lee",
+      "what": "Map amendment at 1653 W 35th St, McKinley Park — O2025-0017887 (App No. A-9006), Lee-filed, passed 2025-07-16",
+      "reason": "Lee-initiated but no news coverage stating any housing unit impact; no citable unit count."
+    },
+    {
+      "alder": "Nicole Lee",
+      "what": "Chinatown upzones to B2-5 Neighborhood Mixed-Use at 2323-2325 S Archer Ave / 2310-2326 S Canal St (O2024-0012459) and 2346-2424 S Canal St (O2024-0012460), Lee-filed, introduced 2024-09-18",
+      "reason": "Lee-initiated upzones (B2-5 allows substantial multifamily) but they never received final Council action per eLMS (no passage date, so no effective date), and no citation states units enabled."
+    },
+    {
+      "alder": "Nicole Lee",
+      "what": "Halsted St upzone to B3-2 at 3508-3728 / 3601-3707 S Halsted St — O2024-0012461 (introduced 2024-09-18, not passed) and successor substitute O2025-0019910 (introduced 2025-09-25, RM-4.5/B1-1/M1-2 to B3-2, no final action)",
+      "reason": "Lee-initiated but not passed by City Council per eLMS as of research date; no effective date and no citable unit count."
+    },
+    {
+      "alder": "Nicole Lee",
+      "what": "2606 S Peoria St, Bridgeport — 29-unit, five-story building (6 affordable), rezoned M1-2 to B2-3, City Council approved 2025-04-14 (chicagoyimby.com 2025/04; chicago.urbanize.city post)",
+      "reason": "Citable unit count exists (29 units) but the rezoning was developer-initiated (Henry Tam/Tran); Lee is not the eLMS filing sponsor and no article mentions her initiating or championing it, so attribution to Lee as initiator cannot be confirmed."
+    },
+    {
+      "alder": "Nicole Lee",
+      "what": "2509 S Green St, Bridgeport — 16-apartment, four-story building, Type 1 rezoning approved by City Council March 2025 (chicago.urbanize.city post, 2025-03-20)",
+      "reason": "Citable unit count exists (16 units) but applicant-initiated (Chen's Brothers of Illinois LLC); no citation ties Nicole Lee as initiator/champion."
+    },
+    {
+      "alder": "Nicole Lee",
+      "what": "500 W Pershing Rd (Normal/Pershing), Bridgeport — 12 townhomes, M1-2 to RT-4 rezoning, City Council approved 2023-09 (chicago.urbanize.city/post/city-council-approves-rezoning-500-w-pershing)",
+      "reason": "Citable unit count exists (12 townhomes) but developer-initiated (William Barbaro); no citation mentions Lee's role, so initiator attribution unconfirmed."
+    },
+    {
+      "alder": "Nicole Lee",
+      "what": "Bridgeport Crossing, 3301 S Justine St, McKinley Park — 208 units (originally 223), M2-1 to C2-3 Planned Development, City Council approved 2026-06-30",
+      "reason": "Excluded: site is in Ward 12 — McKinley Park News (news/8253) confirms Ald. Julia Ramirez, not Nicole Lee, supported/championed the zoning change."
+    },
+    {
+      "alder": "Nicole Lee",
+      "what": "CCBA mixed-use redevelopment, 250 W 22nd Place, Chinatown — proposed 52 residential units over a community center (chicagoyimby.com 2023/01)",
+      "reason": "Developer/CCBA-initiated Planned Development proposal; no confirmation of City Council passage found and no citation ties Lee as initiator."
+    },
+    {
+      "alder": "Nicole Lee",
+      "what": "Chinatown condo-hotel at 2000 S Clark St / 2020 S Archer Ave — 102 for-sale condo-hotel suites, zoning approved late 2025 (chicagoyimby.com 2025/12)",
+      "reason": "No alderman attribution in coverage, applicant-initiated, council date not stated, and condo-hotel suites are ambiguous as housing units."
+    },
+    {
+      "alder": "Nicole Lee",
+      "what": "Citywide ADU ordinance (September 2025) re-legalizing accessory dwelling units",
+      "reason": "City-wide policy change, not a Lee-initiated ward action; excluded per attribution rule."
+    },
+    {
+      "alder": "Jason Ervin",
+      "what": "Fifth Avenue corridor downzonings, Dec 2025: O2025-0019459 (3007-3127 & 3064-3134 W Fifth, C1-2/C1-3/RT-4/RM-5 -> B2-2, App A-9062), O2025-0019461 (3401-3425 W Fifth, B3-3 -> B2-2, A-9058), O2025-0019462 (331-339 S Central Park & 3501-3631/3454-3460 W Fifth, B3-3/RS-3/RM-5 -> B2-2, A-9059), O2025-0019460 (3222-3232 W Jackson, C1-3 -> RT-4, A-9060), O2025-0019458 (318 S Christiana, C2-3 -> B2-2, A-9061); all Ervin-filed aldermanic applications, passed 2025-12-10",
+      "reason": "Clearly Ervin-initiated (verified via eLMS filing sponsor and ordinance PDFs) and mostly capacity-reducing (B3-3 FAR 3.0 TOD-eligible parcels cut to B2-2; commercial parcels to RT-4), but no news coverage, plan commission document, or ordinance text states a number of housing units foreclosed - no-estimates rule bars inclusion."
+    },
+    {
+      "alder": "Jason Ervin",
+      "what": "3312-3344 W Lake St rezone (O2024-0012140, Ervin-filed, passed 2024-12-11, M1-3 -> C2-3 per ordinance PDF) and follow-up 3312-3328 W Lake St (O2025-0016401, App A-8972, passed 2025-05-21, scanned PDF unreadable)",
+      "reason": "Ervin-initiated near the Kedzie Green Line RFQ area; M1-3 -> C2-3 technically permits upper-floor residential where manufacturing zoning did not, but no source states any unit count and the C2-3 (motor-vehicle-related commercial) target suggests a non-housing purpose."
+    },
+    {
+      "alder": "Jason Ervin",
+      "what": "135 N Kildare Ave rezone (O2023-0005049, App A-8855, Ervin-filed, passed 2024-01-24), adjacent to the Sankofa Wellness Village campus at Madison/Kildare",
+      "reason": "Ervin-initiated but the ordinance attachment is a scanned plat/application with no extractable from-to text, and no news coverage states any housing unit count for the parcel."
+    },
+    {
+      "alder": "Jason Ervin",
+      "what": "2701-2711 W Lexington St / 2712-2714 W Polk St (O2024-0007765, A-8868) and 2701-2703 W Polk St (O2024-0007766, A-8867), Ervin-filed, both passed 2024-03-20",
+      "reason": "Ervin-initiated rezonings near the Medical District/Tri-Taylor edge (an area he has repeatedly downzoned, e.g. RT-3.5 rezones in 2017-2020 per Block Club-cited coverage), but scanned ordinances and zero news coverage - no citable unit count or direction."
+    },
+    {
+      "alder": "Jason Ervin",
+      "what": "Illinois Medical District planned development modernization (with Ald. Walter Burnett, 27th): C1-2 -> C2-5 across the 373-acre PD, Plan Commission approval Aug 2021, opening the district to large-scale residential (Block Club, 2021-08-26, fetched via curl)",
+      "reason": "Jointly initiated by Burnett and Ervin (not solely Ervin), and no source states any number of units enabled - only that changes 'would open the door to mixed-use and large-scale residential developments.'"
+    },
+    {
+      "alder": "Jason Ervin",
+      "what": "Harvest Homes II, 3415 W Jackson Blvd (Ward 28): 50 affordable units, Plan Commission 2025-06-29, City Council approved July 2025 (Chicago YIMBY, fetched)",
+      "reason": "Citable unit count exists, but neither the YIMBY Plan Commission article nor the Council-approval article mentions Ervin at all, and the rezoning was not Ervin-filed - attribution as Ervin-initiated/championed could not be established."
+    },
+    {
+      "alder": "Jason Ervin",
+      "what": "Hub32 reduction from 63 to 51 units (2025 revised plans) as a potential shrunk_development",
+      "reason": "Both proposed (63) and approved (51) counts are citable, but no source attributes the reduction to Ervin opposition or pressure; coverage describes a developer 'scaled back' plan, apparently cost/financing-driven, so it fails the alder-caused test."
+    },
+    {
+      "alder": "Jason Ervin",
+      "what": "Roosevelt Square Phase 3B (Related Midwest/CHA, Near West Side, 2021: 222 new apartments + 184 rehabbed per Block Club summary)",
+      "reason": "Ervin co-hosted the community process in his then-ward, but the planned development was initiated by CHA/Related Midwest, article not directly fetchable (Block Club 429), and his role reads as convening/support rather than initiating - ambiguous attribution."
+    },
+    {
+      "alder": "Jason Ervin",
+      "what": "Tri-Taylor / Medical District-area downzones Ervin initiated pre-2023 (SO2017-5225 Roosevelt/Grenshaw/Fillmore 2017; O2018-1896 Harrison/Washtenaw/California/Taylor 2018; O2019-5788/5790/5794/5799 Claremont/Oakley/Grenshaw 2019; O2019-9269 and O2019-9272 Congress/Harrison/Flournoy/Lexington 2020), reported as RT-3.5 downzoning to check developers",
+      "reason": "Well-documented Ervin-initiated downzoning campaign (search-surfaced coverage describes RT-3.5 designation limiting construction), but no article or document states units of housing capacity foreclosed for any of them."
+    },
+    {
+      "alder": "Jason Ervin",
+      "what": "Took-office date hint discrepancy: task hint said 2011-07-28",
+      "reason": "Wikipedia (fetched) states Ervin was appointed by Mayor Daley to replace retiring Ed Smith and assumed office January 13, 2011; 2011-01-13 is used as the verified date."
+    },
+    {
+      "alder": "Gregory Mitchell",
+      "what": "Thrive Exchange South, 7905 S Exchange Ave (79th & Exchange) — 6-story mixed-use with 43 affordable units (plus larger RFP vision of 84 workforce rentals and 24 condos); PD rezoning from C1-2/B3-2/RT-4 to C1-3 PD approved by City Council December 2023; construction milestone celebrated May 2025 (https://chicago.urbanize.city/post/city-council-approves-thrive-exchange-south, https://www.chicago.gov/city/en/depts/dcd/provdrs/ec_dev/news/2025/may/mayor-johnson--city-officials-celebrate-construction-milestone-f.html)",
+      "reason": "Attribution failure: this was a city-initiated INVEST South/West RFP (mayoral program under Lightfoot) won by DL3 Realty, which applied for the Planned Development; the city sold the parcel for $1. Ald. Mitchell supported and celebrated it but did not initiate the zoning change, so it does not belong in an alder-initiated registry despite having a solid unit count (43)."
+    },
+    {
+      "alder": "Gregory Mitchell",
+      "what": "Carehaus Chicago site upzone, 2314-2320 E 75th St: B3-2 -> B2-3 (O2025-0016706, App No. A8965, introduced 2025-04-16, passed 2025-06-18). Mitchell is sole eLMS sponsor and personally signed the ordinance (verified in ordinance PDF at https://occprodstoragev1.blob.core.usgovcloudapi.net/matterattachmentspublic/8aed6ee6-1541-44a4-96e1-c1e84ac0f969.pdf). Enables Carehaus Chicago, the first US intergenerational care-based co-housing project ($12.7M project, $5M city grant per https://blockclubchicago.org/2026/01/06/black-owned-brewery-and-little-village-visitor-center-among-58-projects-getting-33-million-from-city/)",
+      "reason": "Clear Mitchell-initiated upzone, but NO public source states the Chicago project's unit count. Carehaus's Baltimore prototype is described as 20-21 units, but using that for Chicago would be an estimate, which the registry forbids. Searched Block Club, Chicago YIMBY, Urbanize, carehaus.net, city press releases — none give a Chicago unit number."
+    },
+    {
+      "alder": "Gregory Mitchell",
+      "what": "South Chicago 8-block residential upzone RS-3 -> RT-4: 8001-8059 S Muskegon, 8000-8059 S Escanaba, 8000-8058 S Exchange, 2949-3025 E 80th St, 2948-3025 E 80th Pl, 2948-3024 E 81st St (O2025-0016328, App No. A-8966, passed 2025-05-21; ordinance signed by Mitchell: https://occprodstoragev1.blob.core.usgovcloudapi.net/matterattachmentspublic/d877d395-d654-4f5b-b947-bd4dc8de6f24.pdf)",
+      "reason": "Genuine Mitchell-initiated area upzone (single-family to two-flat/townhouse/multi-unit across ~8 blocks) with meaningful capacity gain, but no citation anywhere states a unit count or capacity estimate; the ordinance is a boundary-only map amendment. No news coverage found."
+    },
+    {
+      "alder": "Gregory Mitchell",
+      "what": "E 79th St corridor rezone B3-2 -> B2-2 at 2733-2899 and 2800-2870 E 79th St (O2025-0016325, App No. A-8964, passed 2025-05-21; Mitchell sole sponsor, signed ordinance)",
+      "reason": "Housing-enabling (B2 allows ground-floor residential as of right) but same density tier; no citable unit count exists."
+    },
+    {
+      "alder": "Gregory Mitchell",
+      "what": "E 95th St / Torrence corridor rezonings: M1-2 -> B2-1 at 2700-2864 E 95th St (SO2025-0019960, App No. A-9066) and 9510-9594 & 9501-9737 S Torrence Ave + 9545 S Colfax Ave (SO2025-0019962, App No. A-9067), both introduced 2025-09-25, passed 2025-12-10; Mitchell sole sponsor (eLMS + signed ordinance PDFs)",
+      "reason": "Mitchell-initiated conversions of manufacturing/commercial strips to B2-1 neighborhood mixed-use, enabling residential where none was allowed — but no source states units enabled. Part of the fall-2025 wave of proactive rezonings noted by Chicago Cityscape, which gives no unit counts for these segments."
+    },
+    {
+      "alder": "Gregory Mitchell",
+      "what": "South Shore Corridor Study implementation upzones to B2-3 on E 75th and E 79th St corridors: O2026-0025483 (2300-2600/2301-2631/2338-2654 E 75th St + Exchange/Saginaw parcels), O2026-0025480 (2200-2870/2201-2853 E 79th St, from B1-1/B3-1/B3-2/B3-3/M1-2/C1-2; App No. A-9121), O2026-0025482 (1932-2258/2131-2225 E 75th St; App No. A-9124), O2026-0025478 (2900-3032/2901-2953 E 79th St + 7916-8043 S Exchange; App No. A-9122) — all introduced 2026-05-20, passed 2026-06-17; Mitchell sole sponsor and signatory on all four (signed ordinance PDFs fetched from eLMS)",
+      "reason": "Largest Mitchell-initiated upzoning package (multi-block corridor upzones to B2-3, which allows ground-floor residential at -3 density), implementing the DPD South Shore Corridor Study — but neither the ordinances nor any coverage found (Block Club, Cityscape, The Common News zoning summary) states a unit count or capacity figure."
+    },
+    {
+      "alder": "Gregory Mitchell",
+      "what": "Small Mitchell-initiated mixed-use rezones: 2206 E 75th St C1-2 -> B2-2 (O2026-0022546, App No. A-9090) and 2949-2951 E 79th St C1-2 -> B2-2 (O2026-0022547, App No. A-9089), introduced 2026-01-21, passed 2026-05-20",
+      "reason": "No unit counts; single-parcel boundary-only map amendments with no associated project coverage found."
+    },
+    {
+      "alder": "Gregory Mitchell",
+      "what": "9737 S Torrence Ave rezone (O2025-0018801, App No. A-9020, introduced 2025-07-16, passed 2025-09-25), Mitchell sole sponsor",
+      "reason": "Purpose and housing content unverified (only a 2020 unrelated cannabis-related M1->M2 case found for this address); no unit count and unclear housing relevance."
+    },
+    {
+      "alder": "Gregory Mitchell",
+      "what": "Citywide ADU ordinance delay: Mitchell (with Ald. Marty Quinn, 13th) used defer-and-publish on 2025-07-16 to block the final vote legalizing coach houses/granny flats citywide (https://blockclubchicago.org/2025/07/16/measure-to-allow-new-coach-houses-basement-units-citywide-stalls-in-city-council-for-now/)",
+      "reason": "Anti-housing action by Mitchell but it is a citywide policy delay (ordinance later passed September 2025), not a ward rezoning or a development reduction; no unit count is attributable to the delay."
+    },
+    {
+      "alder": "Gregory Mitchell",
+      "what": "Quantum Shore / South Works PD (415 acres between E 79th St and the Calumet River, spanning Wards 7 and 10), council-approved 2024-12-11 (https://blockclubchicago.org/2024/12/11/plans-for-south-side-quantum-campus-get-city-council-ok/)",
+      "reason": "Developer-initiated (Related Midwest) and mayor-backed planned development; not alder-initiated, and no stated housing unit count in the approved PD coverage."
+    }
+  ]
+}

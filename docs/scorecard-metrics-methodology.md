@@ -304,6 +304,12 @@ and attribution before the entry is merged. `ALDER_ZONING_CANDIDATES` seeds the 
 to the name-gap caveat in §5). After merge, flip `bonus_units`/`lost_units` to
 `show_in_table=True` in `CHICAGO_WARD_METRICS` and re-run the seeder.
 
+The operational protocol (agent workflow shape, merge tooling, coverage bar for the
+`show_in_table` flip, pilot log) lives in `docs/alder-units-research-protocol.md`. Reviewed
+research JSON is merged with `python -m scripts.merge_units_registry <research.json>`, which
+validates against the same rules CI enforces (shared validators in
+`app/imports/sources/alder_units_validation.py`) and refuses to write on any violation.
+
 ---
 
 ## 7. Community-collected Zillow affordability metrics
