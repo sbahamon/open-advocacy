@@ -18,6 +18,7 @@ from app.services.district_service import DistrictService
 from app.services.group_service import GroupService
 from app.services.user_service import UserService
 from app.services.scorecard_service import ScorecardService
+from app.services.zoning_audit_service import ZoningAuditService
 from app.geo.provider_factory import get_geo_provider
 
 
@@ -121,6 +122,19 @@ def create_scorecard_service(
     )
 
 
+def create_zoning_audit_service(
+    projects_provider=None,
+    entities_provider=None,
+    districts_provider=None,
+) -> ZoningAuditService:
+    """Create a ZoningAuditService instance."""
+    return ZoningAuditService(
+        projects_provider=projects_provider or get_projects_provider(),
+        entities_provider=entities_provider or get_entities_provider(),
+        districts_provider=districts_provider or get_districts_provider(),
+    )
+
+
 # FastAPI dependency functions that can be used with Depends()
 def get_project_service(
     projects_provider=Depends(get_projects_provider),
@@ -213,6 +227,19 @@ def get_scorecard_service(
         projects_provider=projects_provider,
         entities_provider=entities_provider,
         status_records_provider=status_records_provider,
+        districts_provider=districts_provider,
+    )
+
+
+def get_zoning_audit_service(
+    projects_provider=Depends(get_projects_provider),
+    entities_provider=Depends(get_entities_provider),
+    districts_provider=Depends(get_districts_provider),
+) -> ZoningAuditService:
+    """Get a ZoningAuditService instance with dependencies injected."""
+    return ZoningAuditService(
+        projects_provider=projects_provider,
+        entities_provider=entities_provider,
         districts_provider=districts_provider,
     )
 

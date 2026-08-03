@@ -82,6 +82,43 @@ export interface DashboardConfig {
   metrics?: MetricDisplayConfig[];
 }
 
+export interface ZoningAuditMatter {
+  record_number: string;
+  matter_guid: string;
+  title?: string | null;
+  address?: string | null;
+  introduction_date?: string | null;
+  final_action_date?: string | null;
+  status?: string | null;
+  sub_status?: string | null;
+  lat?: number | null;
+  lon?: number | null;
+  near_boundary: boolean;
+  span_days?: number | null;
+  stalled: boolean;
+  pending: boolean;
+  withdrawn: boolean;
+}
+
+export interface ZoningAuditWard {
+  ward: number;
+  alder_name?: string | null;
+  zoning_median_days?: number | null;
+  zoning_matter_count: number;
+  zoning_stalled_count: number;
+  n_resolved: number;
+  n_pending: number;
+  matters: ZoningAuditMatter[];
+}
+
+export interface ZoningAuditResponse {
+  group_name: string;
+  jurisdiction_id?: string | null;
+  meta: Record<string, unknown>;
+  wards: ZoningAuditWard[];
+  unassigned_matters: ZoningAuditMatter[];
+}
+
 export interface Project {
   id: string;
   title: string;

@@ -207,6 +207,52 @@ class ScorecardEntityRow(BaseModel):
     metrics: dict[str, float | int | str] | None = None
 
 
+class ZoningAuditMatter(BaseModel):
+    """One zoning reclassification as it entered the ward delay statistics.
+
+    Raw eLMS fields travel as committed; span/stalled/pending/withdrawn are
+    derived server-side against the dataset's frozen as-of date using the same
+    rules as the aggregate computation.
+    """
+
+    record_number: str
+    matter_guid: str
+    title: str | None = None
+    address: str | None = None
+    introduction_date: str | None = None
+    final_action_date: str | None = None
+    status: str | None = None
+    sub_status: str | None = None
+    lat: float | None = None
+    lon: float | None = None
+    near_boundary: bool = False
+    span_days: int | None = None
+    stalled: bool = False
+    pending: bool = False
+    withdrawn: bool = False
+
+
+class ZoningAuditWard(BaseModel):
+    ward: int
+    alder_name: str | None = None
+    zoning_median_days: float | None = None
+    zoning_matter_count: int = 0
+    zoning_stalled_count: int = 0
+    n_resolved: int = 0
+    n_pending: int = 0
+    matters: list[ZoningAuditMatter] = []
+
+
+class ZoningAuditResponse(BaseModel):
+    group_name: str
+    jurisdiction_id: UUID | None = None
+    # ZONING_DELAY_META passthrough: as-of/term dates, coverage, near-boundary
+    # and unassigned record-number lists.
+    meta: dict[str, Any]
+    wards: list[ZoningAuditWard]
+    unassigned_matters: list[ZoningAuditMatter] = []
+
+
 class ScorecardResponse(BaseModel):
     group_name: str
     representative_title: str = "Representative"

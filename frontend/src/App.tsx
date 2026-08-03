@@ -15,6 +15,7 @@ import LoginPage from './pages/LoginPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import ProjectDashboard from './pages/ProjectDashboard';
 import Scorecard from './pages/Scorecard/index';
+import ScorecardAudit from './pages/ScorecardAudit/index';
 import ScorecardIndex from './pages/ScorecardIndex';
 
 // Admin Pages
@@ -57,6 +58,7 @@ const App: React.FC = () => {
                 <Route path="/scorecard/abundant-housing-illinois" element={<Navigate to="/scorecard/abundant-housing-illinois-chicago-city-council" replace />} />
                 <Route path="/scorecard/strong-towns-chicago" element={<Navigate to="/scorecard/strong-towns-chicago-chicago-city-council" replace />} />
                 <Route path="/scorecard/:groupSlug" element={<Scorecard />} />
+                <Route path="/scorecard/:groupSlug/audit" element={<ScorecardAudit />} />
                 <Route
                   path="/adu-opt-in-dashboard"
                   element={<Navigate to="/dashboard/adu-opt-in-dashboard" replace />}

@@ -314,3 +314,10 @@ def is_alder_sponsored(
 ) -> bool:
     """True when at least one of the matter's sponsors is a known alder."""
     return bool(matched_alder_sponsors(matter, known_alder_names))
+
+
+# Public aliases for consumers outside the fetch pipeline (the zoning-audit
+# service derives per-matter flags with the exact same date/withdrawal rules
+# the aggregate computation uses).
+parse_elms_date = _parse_elms_date
+is_withdrawn = _is_withdrawn
